@@ -72,6 +72,14 @@ class ChatModel:
         tools: Optional[str] = None,
         **input_kwargs,
     ) -> AsyncGenerator[str, None]:
+        print("system:")
+        print(system)
+        print("--------------")
+        print("tools:")
+        print(tools)
+        print("--------------")
+        print("messages", messages)
+        print("--------------")
         async for new_token in self.engine.stream_chat(messages, system, tools, **input_kwargs):
             yield new_token
 

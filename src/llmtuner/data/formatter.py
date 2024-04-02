@@ -21,10 +21,22 @@ TOOL_SYSTEM_PROMPT = (
     "```\n"
 )
 
+# TOOL_SYSTEM_PROMPT_RUBRA = (
+#     "You have access to the following functions/tools:\n{tool_text}"
+#     "Use the following format if using a tool:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+#     "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate."
+#     "Any tool call you make must match the name of a function(s) provided above."
+# )
+
 TOOL_SYSTEM_PROMPT_RUBRA = (
-    "You have access to the following tools:\n{tool_text}"
-    "Use the following format if using a tool:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+    "You have access to the following custom functions/tools that you can interact with. Here's a brief overview of each function and how you can utilize them in your queries:\n{tool_text}\n"
+    "How to Interact with These Tools:\n"
+    "When you wish to utilize one or more of these functions in your request, format your input as follows:\n"
+    "[function_name(arg1=value1, arg2=value2, ...), another_function_name(arg1=value1, arg2=value2, ...)]\n"
+    "This format allows you to make calls to multiple functions simultaneously if needed. It’s important to gather all necessary information before making a function call. If additional details are required or you have questions about how to effectively use these functions, do not hesitate to ask for clarification.\n"
+    "Please note, while these tools are at your disposal, you're encouraged to use them as you see fit. There is no obligation to force a function call if it does not naturally fit into the context of your request. Our aim is to provide you with resources that enhance your interaction and achieve your goals efficiently."
 )
+
 
 
 def default_tool_formatter(tools: List[Dict[str, Any]]) -> str:
@@ -275,7 +287,7 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
 
             docstring_lines.append('"""')
             docstring = "\n    ".join(docstring_lines)
-            function_definition = f"def {func_name}({func_args_str}):\n    {docstring}\n    pass\n"
+            function_definition = f"<<function>>\ndef {func_name}({func_args_str}):\n    {docstring}\n<<end_of_function>>"
             function_definitions.append(function_definition)
         except Exception as e:
             print(f"Error {e}")

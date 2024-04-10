@@ -21,10 +21,22 @@ TOOL_SYSTEM_PROMPT = (
     "```\n"
 )
 
+# TOOL_SYSTEM_PROMPT_RUBRA = (
+#     "You have access to the following functions/tools:\n{tool_text}"
+#     "Use the following format if using a tool:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+#     "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate."
+#     "Any tool call you make must match the name of a function(s) provided above."
+# )
+
 TOOL_SYSTEM_PROMPT_RUBRA = (
-    "You have access to the following tools:\n{tool_text}"
-    "Use the following format if using a tool:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+    "You have access to the following custom functions/tools that you can interact with. Here's a brief overview of each function and how you can utilize them in your queries:\n{tool_text}\n"
+    "How to Interact with These Tools:\n"
+    "When you wish to utilize one or more of these functions in your request, format your input as follows:\n"
+    "[function_name(arg1=value1, arg2=value2, ...), another_function_name(arg1=value1, arg2=value2, ...)]\n"
+    "This format allows you to make calls to multiple functions simultaneously if needed. It’s important to gather all necessary information before making a function call. If additional details are required or you have questions about how to effectively use these functions, do not hesitate to ask for clarification.\n"
+    "Please note, while these tools are at your disposal, you're encouraged to use them as you see fit. There is no obligation to force a function call if it does not naturally fit into the context of your request. Our aim is to provide you with resources that enhance your interaction and achieve your goals efficiently."
 )
+
 
 
 def default_tool_formatter(tools: List[Dict[str, Any]]) -> str:
@@ -160,19 +172,79 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
         "null": "None",
     }
 
-    for spec in specs:
-        try:
-            if "function" not in spec:
-                continue
-            func_spec = spec["function"]
+    if isinstance(specs, str):
+        print("Oh boy", specs)
 
-            func_name = func_spec.get("name", "unnamed_function")
-            description = func_spec.get("description", "No description provided.") or "No description provided."
+    for spec in specs:
+        # try:
+        #     if "function" not in spec:
+        #         continue
+        #     func_spec = spec["function"]
+
+        #     func_name = func_spec.get("name", "unnamed_function")
+        #     description = func_spec.get("description", "No description provided.") or "No description provided."
+
+        #     prop_dict = {}
+        #     required_params = []
+
+        #     parameters = func_spec.get('parameters')
+        #     if parameters and isinstance(parameters, dict) and 'properties' in parameters:
+        #         temp_properties = parameters['properties']
+        #         if isinstance(temp_properties, dict) and ('required' in temp_properties or 'optional' in temp_properties):
+        #             for status in ['required', 'optional']:
+        #                 for item in temp_properties.get(status, []):
+        #                     item['required'] = (status == 'required')
+        #                     prop_dict[item['name']] = item
+        #         elif isinstance(temp_properties, list):
+        #             for item in temp_properties:
+        #                 if isinstance(item, dict) and 'name' in item:
+        #                     prop_dict[item['name']] = item
+        #         elif isinstance(temp_properties, dict):
+        #             prop_dict = temp_properties
+        #         else:
+        #             print(f"Unexpected properties format in function {func_name}.")
+        #     elif parameters is None:
+        #         print(f"No parameters defined for function {func_name}.")
+        #         continue  # Skip further processing for this function
+
+        #     if 'required' in parameters and isinstance(parameters['required'], list):
+        #         required_params = parameters['required']
+
+        #     func_args = []
+        #     for param, details in prop_dict.items():
+        #         param_type = details.get("type", "Any")
+        #         python_type = type_mapping.get(param_type.lower(), "Any") if isinstance(param_type, str) else "Any"
+        #         is_required = details.get('required', False)
+
+        #         arg_str = f"{param}: {python_type}"
+        #         if not is_required:
+        #             arg_str += " = None"
+        #         func_args.append(arg_str)
+
+        #     func_args_str = ", ".join(func_args) if func_args else ""
+        #     docstring_lines = ['"""', description]
+        #     for param, details in prop_dict.items():
+        #         required_text = "" if details.get('required', False) else "(Optional)"
+        #         param_description = details.get("description", "No description provided.")
+        #         docstring_lines.append(f":param {param}: {param_description} {required_text}")
+
+        #     docstring_lines.append('"""')
+        #     docstring = "\n    ".join(docstring_lines)
+        #     function_definition = f"def {func_name}({func_args_str}):\n    {docstring}\n    pass\n"
+        #     function_definitions.append(function_definition)
+        try:
+            # print("spec type", type(spec))
+            if isinstance(spec, str):
+                spec = json.loads(spec)
+                print("Converted", spec)
+
+            func_name = spec.get("name", "unnamed_function")
+            description = spec.get("description", "No description provided.") or "No description provided."
 
             prop_dict = {}
             required_params = []
 
-            parameters = func_spec.get('parameters')
+            parameters = spec.get('parameters')
             if parameters and isinstance(parameters, dict) and 'properties' in parameters:
                 temp_properties = parameters['properties']
                 if isinstance(temp_properties, dict) and ('required' in temp_properties or 'optional' in temp_properties):
@@ -215,12 +287,14 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
 
             docstring_lines.append('"""')
             docstring = "\n    ".join(docstring_lines)
-            function_definition = f"def {func_name}({func_args_str}):\n    {docstring}\n    pass\n"
+            function_definition = f"<<function>>\ndef {func_name}({func_args_str}):\n    {docstring}\n<<end_of_function>>"
             function_definitions.append(function_definition)
         except Exception as e:
             print(f"Error {e}")
+            print(json.dumps(spec))
+            print(specs)
             print("=========================")
-            print(json.dumps(func_spec))
+            continue
 
     res = TOOL_SYSTEM_PROMPT_RUBRA.format( tool_text="\n".join(function_definitions))
     return res
@@ -267,7 +341,7 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
     regex = re.compile(r"<<functions>>\[(.*?)\]", re.DOTALL)
     matches = re.findall(regex, content)
 
-    print("content:", content)
+    # print("content:", content)
 
     if not matches:
         return content

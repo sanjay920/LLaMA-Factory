@@ -1,4 +1,125 @@
 {
+  "goat": {
+    "hf_hub_url": "sanjay920/goat-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "metamathqa": {
+    "hf_hub_url": "sanjay920/MetaMathQA-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
+  "mathinstruct": {
+    "hf_hub_url": "sanjay920/MathInstruct-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
+  "capybara": {
+    "hf_hub_url": "sanjay920/capybara",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "rubra-codefeedback": {
+    "hf_hub_url": "sanjay920/Code-Feedback-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "rubra-functions-rest": {
+    "hf_hub_url": "sanjay920/functions-rest-processed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "rubra-functions-sql": {
+    "hf_hub_url": "sanjay920/functions-sql-processed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "rubra-functions-relevance": {
+    "hf_hub_url": "sanjay920/functions-relevance-processed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "rubra-functions-parallel_multiple": {
+    "hf_hub_url": "sanjay920/functions-parallel_multiple-processed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "rubra-functions-parallel": {
+    "hf_hub_url": "sanjay920/functions-parallel-processed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "rubra-functions-multiple": {
+    "hf_hub_url": "sanjay920/functions-multiple-processed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "rubra-functions-openhermes": {
+    "hf_hub_url": "sanjay920/openhermes-functions",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions-openhermes-longest": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions-openhermes-longest-50k": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest-50k",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions-gptscript": {
+    "hf_hub_url": "sanjay920/functions-gptscript",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
   "rubra-functions": {
     "file_name": "rubra-functions-v0.json",
     "file_sha1": "4e7d40aa818f7b551bd4a6cf71155c5d0e46017249867efb28af2d871644a1c8",
@@ -45,12 +166,21 @@
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
-      "tools": "tools",
-      "system": "system"
+      "tools": "tools"
     }
   },
   "rubra-systemchat": {
     "file_name": "systemchat-functions.json",
+    "file_sha1": "4e7d40aa818f7b551bd4a6cf71155c5d0e46017249867efb28af2d871644a1c8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-openhermes": {
+    "file_name": "openhermes-functions.json",
     "file_sha1": "4e7d40aa818f7b551bd4a6cf71155c5d0e46017249867efb28af2d871644a1c8",
     "formatting": "sharegpt",
     "columns": {
@@ -116,6 +246,27 @@
     "columns": {
       "messages": "conversations",
       "tools": "tools"
+    }
+  },
+  "codefeedback": {
+    "hf_hub_url": "mrfakename/Code-Feedback-ShareGPT",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "code74k": {
+    "hf_hub_url": "ajibawa-2023/Code-74k-ShareGPT",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "openhermes": {
+    "hf_hub_url": "teknium/OpenHermes-2.5",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
     }
   },
   "rubra_toolcall": {
@@ -262,7 +413,10 @@
   },
   "sharegpt_hyper": {
     "hf_hub_url": "totally-not-an-llm/sharegpt-hyperfiltered-3k",
-    "formatting": "sharegpt"
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
   },
   "sharegpt4": {
     "hf_hub_url": "shibing624/sharegpt_gpt4",

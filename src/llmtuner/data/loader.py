@@ -89,7 +89,15 @@ def load_single_dataset(
             kwargs = {"trust_remote_code": True}
         else:
             kwargs = {}
-
+        logger.info("data_args {}...".format(data_args))
+        logger.info("data_path {}...".format(data_path))
+        logger.info("data_name {}...".format(data_name))
+        logger.info("data_dir {}...".format(data_dir))
+        logger.info("data_files {}...".format(data_files))
+        logger.info("split {}...".format(data_args.split))
+        logger.info("cache_dir {}...".format(model_args.cache_dir))
+        logger.info("token {}...".format(model_args.hf_hub_token))
+        
         dataset = load_dataset(
             path=data_path,
             name=data_name,
@@ -101,6 +109,7 @@ def load_single_dataset(
             streaming=(data_args.streaming and (dataset_attr.load_from != "file")),
             **kwargs,
         )
+        logger.info("dataset loaded")
 
     if data_args.streaming and (dataset_attr.load_from == "file"):  # faster than specifying streaming=True
         dataset = dataset.to_iterable_dataset()  # TODO: add num shards parameter

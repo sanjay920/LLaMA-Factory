@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Union
 from datasets import Features
 
 from .utils import Role
+import json
 
 
 if TYPE_CHECKING:
@@ -60,6 +61,9 @@ def convert_sharegpt(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr"
     odd_tags = (dataset_attr.user_tag, dataset_attr.observation_tag)
     even_tags = (dataset_attr.assistant_tag, dataset_attr.function_tag)
     accept_tags = (odd_tags, even_tags)
+    loaded_jsons = [json.loads(row) for row in examples[dataset_attr.messages]]
+    examples[dataset_attr.messages] = loaded_jsons
+    # print("examples[dataset_attr.tools][i]", examples[dataset_attr.tools][0])
     for i, messages in enumerate(examples[dataset_attr.messages]):
         if dataset_attr.system_tag and messages[0][dataset_attr.role_tag] == dataset_attr.system_tag:
             system = messages[0][dataset_attr.content_tag]
@@ -73,13 +77,13 @@ def convert_sharegpt(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr"
 
         aligned_messages = []
         for turn_idx, message in enumerate(messages):
-            if message[dataset_attr.role_tag] not in accept_tags[turn_idx % 2]:
-                raise ValueError("Invalid role tag in {}.".format(messages))
+            # if message[dataset_attr.role_tag] not in accept_tags[turn_idx % 2]:
+            #     raise ValueError("Invalid role tag in {}.".format(messages))
 
             aligned_messages.append(
                 {"role": tag_mapping[message[dataset_attr.role_tag]], "content": message[dataset_attr.content_tag]}
             )
-
+        # print(examples[dataset_attr.tools][i])
         outputs["prompt"].append(aligned_messages[:-1])
         outputs["response"].append(aligned_messages[-1:])
         outputs["system"].append(system)

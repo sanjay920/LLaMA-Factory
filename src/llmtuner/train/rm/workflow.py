@@ -2,13 +2,12 @@
 
 from typing import TYPE_CHECKING, List, Optional
 
-from ...data import get_dataset, split_dataset
+from ...data import PairwiseDataCollatorWithPadding, get_dataset, split_dataset
 from ...extras.callbacks import FixValueHeadModelCallback
 from ...extras.misc import fix_valuehead_checkpoint
 from ...extras.ploting import plot_loss
 from ...model import load_model, load_tokenizer
-from ..utils import create_custom_optimzer, create_modelcard_and_push
-from .collator import PairwiseDataCollatorWithPadding
+from ..utils import create_modelcard_and_push
 from .metric import compute_accuracy
 from .trainer import PairwiseTrainer
 
@@ -35,14 +34,13 @@ def run_rm(
     training_args.remove_unused_columns = False  # important for pairwise dataset
 
     # Initialize our Trainer
-    optimizer = create_custom_optimzer(model, dataset, training_args, finetuning_args)
     trainer = PairwiseTrainer(
         model=model,
         args=training_args,
+        finetuning_args=finetuning_args,
         tokenizer=tokenizer,
         data_collator=data_collator,
         callbacks=callbacks + [FixValueHeadModelCallback()],
-        optimizers=(optimizer, None),
         compute_metrics=compute_accuracy,
         **split_dataset(dataset, data_args, training_args),
     )
@@ -57,7 +55,7 @@ def run_rm(
         trainer.save_metrics("train", train_result.metrics)
         trainer.save_state()
         if trainer.is_world_process_zero() and finetuning_args.plot_loss:
-            plot_loss(training_args.output_dir, keys=["loss", "eval_loss"])
+            plot_loss(training_args.output_dir, keys=["loss", "eval_loss", "eval_accuracy"])
 
     # Evaluation
     if training_args.do_eval:

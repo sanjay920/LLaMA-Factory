@@ -1,4 +1,20 @@
 {
+  "rubra-functions-test-simple": {
+    "hf_hub_url": "sanjay920/functions-test-simple",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "dstc8": {
+    "hf_hub_url": "sanjay920/dstc8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
   "rubra-functions-rest": {
     "hf_hub_url": "sanjay920/functions-rest-processed",
     "formatting": "sharegpt",
@@ -134,7 +150,7 @@
     "file_sha1": "0016a4df88f523aad8dc004ada7575896824a0dc"
   },
   "alpaca_gpt4_en": {
-    "file_name": "alpaca_gpt4_data_en.json",
+    "file_name": "c.json",
     "file_sha1": "647f4ad447bd993e4b6b6223d1be15208bab694a"
   },
   "alpaca_gpt4_zh": {

@@ -72,6 +72,33 @@
       "system": "system"
     }
   },
+  "rubra-functions-openhermes-longest": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions-openhermes-longest-50k": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest-50k",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions-gptscript": {
+    "hf_hub_url": "sanjay920/functions-gptscript",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
   "rubra-functions": {
     "file_name": "rubra-functions-v0.json",
     "file_sha1": "4e7d40aa818f7b551bd4a6cf71155c5d0e46017249867efb28af2d871644a1c8",
@@ -413,6 +440,14 @@
     "ms_hub_url": "AI-ModelScope/WizardLM_evol_instruct_V2_196k",
     "formatting": "sharegpt"
   },
+  "glaive_toolcall_100k": {
+    "hf_hub_url": "hiyouga/glaive-function-calling-v2-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
   "cosmopedia": {
     "hf_hub_url": "HuggingFaceTB/cosmopedia",
     "columns": {
@@ -488,6 +523,16 @@
     "file_sha1": "515b18ed497199131ddcc1af950345c11dc5c7fd",
     "ranking": true
   },
+  "orca_rlhf": {
+    "file_name": "orca_rlhf.json",
+    "file_sha1": "acc8f74d16fd1fc4f68e7d86eaa781c2c3f5ba8e",
+    "ranking": true,
+    "columns": {
+      "prompt": "question",
+      "response": "answer",
+      "system": "system"
+    }
+  },
   "nectar_rm": {
     "hf_hub_url": "mlinmg/RLAIF-Nectar",
     "ms_hub_url": "AI-ModelScope/RLAIF-Nectar",
@@ -539,12 +584,11 @@
     }
   },
   "pile": {
-    "hf_hub_url": "EleutherAI/pile",
+    "hf_hub_url": "monology/pile-uncopyrighted",
     "ms_hub_url": "AI-ModelScope/pile",
     "columns": {
       "prompt": "text"
-    },
-    "subset": "all"
+    }
   },
   "skypile": {
     "hf_hub_url": "Skywork/SkyPile-150B",

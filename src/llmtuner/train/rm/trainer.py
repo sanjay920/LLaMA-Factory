@@ -1,16 +1,19 @@
 import json
 import os
-from typing import TYPE_CHECKING, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import torch
 from transformers import Trainer
 
 from ...extras.logging import get_logger
+from ..utils import create_custom_optimzer, create_custom_scheduler
 
 
 if TYPE_CHECKING:
     from transformers.modeling_utils import PreTrainedModel
     from transformers.trainer import PredictionOutput
+
+    from ...hparams import FinetuningArguments
 
 
 logger = get_logger(__name__)
@@ -18,12 +21,24 @@ logger = get_logger(__name__)
 
 class PairwiseTrainer(Trainer):
     r"""
-    Inherits PeftTrainer to compute pairwise loss.
+    Inherits Trainer to compute pairwise loss.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, finetuning_args: "FinetuningArguments", **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.finetuning_args = finetuning_args
         self.can_return_loss = True  # override property to return eval_loss
+
+    def create_optimizer(self) -> "torch.optim.Optimizer":
+        if self.optimizer is None:
+            self.optimizer = create_custom_optimzer(self.model, self.args, self.finetuning_args)
+        return super().create_optimizer()
+
+    def create_scheduler(
+        self, num_training_steps: int, optimizer: Optional["torch.optim.Optimizer"] = None
+    ) -> "torch.optim.lr_scheduler.LRScheduler":
+        create_custom_scheduler(self.args, num_training_steps, optimizer)
+        return super().create_scheduler(num_training_steps, optimizer)
 
     def compute_loss(
         self, model: "PreTrainedModel", inputs: Dict[str, torch.Tensor], return_outputs: bool = False
@@ -34,7 +49,7 @@ class PairwiseTrainer(Trainer):
         Subclass and override to inject custom behavior.
 
         Note that the first element will be removed from the output tuple.
-        See: https://github.com/huggingface/transformers/blob/v4.30.2/src/transformers/trainer.py#L3509
+        See: https://github.com/huggingface/transformers/blob/v4.39.1/src/transformers/trainer.py#L3777
         """
         # Compute rewards
         _, _, values = model(**inputs, output_hidden_states=True, return_dict=True)

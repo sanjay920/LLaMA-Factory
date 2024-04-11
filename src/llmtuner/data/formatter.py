@@ -21,10 +21,18 @@ TOOL_SYSTEM_PROMPT = (
     "```\n"
 )
 
+# TOOL_SYSTEM_PROMPT_RUBRA = (
+#     "You have access to the following functions/tools:\n{tool_text}"
+#     "Use the following format if using a tool:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+#     "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate."
+#     "Any tool call you make must match the name of a function(s) provided above."
+# )
+
 TOOL_SYSTEM_PROMPT_RUBRA = (
     "You have access to the following tools:\n{tool_text}"
     "Use the following format if using a tool:\n<<functions>>[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
 )
+
 
 
 def default_tool_formatter(tools: List[Dict[str, Any]]) -> str:
@@ -161,7 +169,7 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
 
             docstring_lines.append('"""')
             docstring = "\n    ".join(docstring_lines)
-            function_definition = f"def {func_name}({func_args_str}):\n    {docstring}\n    pass\n"
+            function_definition = f"<<function>>\ndef {func_name}({func_args_str}):\n    {docstring}\n<<end_of_function>>"
             function_definitions.append(function_definition)
         except Exception as e:
             print(f"Error {e}")

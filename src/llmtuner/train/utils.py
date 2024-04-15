@@ -5,7 +5,6 @@ from transformers import Trainer
 from transformers.optimization import get_scheduler
 from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
 from transformers.trainer_pt_utils import get_parameter_names
-from transformers.utils.versions import require_version
 
 from ..extras.logging import get_logger
 from ..extras.packages import is_galore_available
@@ -57,9 +56,11 @@ def create_modelcard_and_push(
     kwargs = {
         "tasks": "text-generation",
         "finetuned_from": model_args.model_name_or_path,
-        "dataset": [dataset.strip() for dataset in data_args.dataset.split(",")],
         "tags": ["llama-factory", finetuning_args.finetuning_type],
     }
+    if data_args.dataset is not None:
+        kwargs["dataset"] = [dataset.strip() for dataset in data_args.dataset.split(",")]
+
     if not training_args.do_train:
         pass
     elif training_args.push_to_hub:
@@ -166,8 +167,6 @@ def _create_galore_optimizer(
     training_args: "Seq2SeqTrainingArguments",
     finetuning_args: "FinetuningArguments",
 ) -> "torch.optim.Optimizer":
-    require_version("galore_torch", "To fix: pip install galore_torch")
-
     if len(finetuning_args.galore_target) == 1 and finetuning_args.galore_target[0] == "all":
         galore_targets = find_all_linear_modules(model)
     else:

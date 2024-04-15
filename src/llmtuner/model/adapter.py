@@ -32,6 +32,9 @@ def init_adapter(
         logger.info("Adapter is not found at evaluation, load the base model.")
         return model
 
+    if finetuning_args.finetuning_type != "lora" and getattr(model, "quantization_method", None):
+        raise ValueError("You can only use lora for quantized models.")
+
     if finetuning_args.finetuning_type == "full" and is_trainable:
         logger.info("Fine-tuning method: Full")
         if not finetuning_args.pure_bf16:
@@ -129,9 +132,12 @@ def init_adapter(
             if finetuning_args.use_llama_pro:
                 target_modules = find_expanded_modules(model, target_modules, finetuning_args.num_layer_trainable)
 
-            if finetuning_args.use_dora and getattr(model, "quantization_method", None) is not None:
-                if getattr(model, "quantization_method", None) != QuantizationMethod.BITS_AND_BYTES:
-                    raise ValueError("DoRA is not compatible with PTQ-quantized models.")
+            if (
+                finetuning_args.use_dora
+                and getattr(model, "quantization_method", None) is not None
+                and getattr(model, "quantization_method", None) != QuantizationMethod.BITS_AND_BYTES
+            ):
+                raise ValueError("DoRA is not compatible with PTQ-quantized models.")
 
             peft_kwargs = {
                 "r": finetuning_args.lora_rank,
@@ -145,7 +151,11 @@ def init_adapter(
             if model_args.use_unsloth:
                 from unsloth import FastLanguageModel  # type: ignore
 
-                unsloth_peft_kwargs = {"model": model, "max_seq_length": model_args.model_max_length}
+                unsloth_peft_kwargs = {
+                    "model": model,
+                    "max_seq_length": model_args.model_max_length,
+                    "use_gradient_checkpointing": "unsloth",
+                }
                 model = FastLanguageModel.get_peft_model(**peft_kwargs, **unsloth_peft_kwargs)
             else:
                 lora_config = LoraConfig(

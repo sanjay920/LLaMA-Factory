@@ -75,6 +75,127 @@ def default_tool_formatter(tools: List[Dict[str, Any]]) -> str:
         format_prompt=JSON_FORMAT_PROMPT,
     )
 
+def json_schema_to_typescript_type(schema, param_name):
+    ts_type = 'any'  # default type
+    enum_comment = ''
+    integer_comment = ''
+    description_comment = ''
+    
+    if isinstance(schema, dict) and 'type' in schema:
+        json_type = schema['type']
+        if json_type == 'array':
+            item_type = 'any' if 'items' not in schema else json_schema_to_typescript_type(schema['items'], param_name)[0]
+            ts_type = f'{item_type}[]'
+        elif json_type == 'number':
+            ts_type = 'number'
+        elif json_type == 'integer':
+            ts_type = 'number'  # TypeScript doesn't differentiate between number and integer
+            integer_comment = f' * @param {param_name} - Integer'
+        elif json_type == 'object':
+            ts_type, _ = generate_typescript_interface(schema, param_name)
+        elif json_type == 'boolean':
+            ts_type = 'boolean'
+        elif json_type == 'null':
+            ts_type = 'null'
+        elif json_type == 'string':
+            ts_type = 'string'
+
+    if 'enum' in schema:
+        enum_comment = f' * @enum {param_name} - Possible values: ' + ', '.join([f'"{enum_value}"' for enum_value in schema['enum']])
+        ts_type = 'string'
+    if 'description' in schema:
+        description_comment = f' * @param {param_name} - {schema["description"]}'
+
+    # Return only the type for nested objects to avoid duplicating comments
+    if isinstance(schema, dict) and schema.get('type') == 'object':
+        return ts_type, '', '', ''
+    
+    return ts_type, enum_comment, integer_comment, description_comment
+
+
+def generate_typescript_interface(schema, interface_name):
+    properties = schema.get('properties', {})
+    required = schema.get('required', [])
+    
+    interface_body = []
+    descriptions = []
+    for prop_name, prop_schema in properties.items():
+        prop_type, enum_comment, integer_comment, description_comment = json_schema_to_typescript_type(prop_schema, prop_name)
+        is_optional = prop_name not in required
+        interface_body.append(f'    {prop_name}{"?" if is_optional else ""}: {prop_type};')
+        if description_comment:
+            descriptions.append(description_comment)
+        if enum_comment:
+            descriptions.append(enum_comment)
+        if integer_comment:
+            descriptions.append(integer_comment)
+    
+    comments = "\n".join(descriptions)
+    interface_definition = f'interface {interface_name} {{\n' + "\n".join(interface_body) + '\n}'
+    return interface_definition, comments
+
+def generate_typescript_function(function_schema):
+    func_name = function_schema['name']
+    description = function_schema.get('description', '')
+    parameters_schema = function_schema.get('parameters', {}).get('properties', {})
+    required_params = function_schema.get('parameters', {}).get('required', [])
+
+    args_list = []
+    comments_list = []
+    interfaces = []
+    for param_name, param_schema in parameters_schema.items():
+        ts_type, enum_comment, integer_comment, description_comment = json_schema_to_typescript_type(param_schema, param_name)
+        if ts_type.startswith('interface'):
+            interface_definition, nested_comments = generate_typescript_interface(param_schema, f'{func_name}_{param_name.capitalize()}Params')
+            interfaces.append(interface_definition)
+            comments_list.append(nested_comments)
+            ts_type = f'{func_name}_{param_name.capitalize()}Params'
+        else:
+            if description_comment:
+                comments_list.append(description_comment)
+            if enum_comment:
+                comments_list.append(enum_comment)
+            if integer_comment:
+                comments_list.append(integer_comment)
+        is_optional = param_name not in required_params
+        args_list.append(f'{param_name}{"?" if is_optional else ""}: {ts_type}')
+
+    args_str = ", ".join(args_list)
+    comments_str = "\n".join(comments_list)
+    interfaces_str = "\n\n".join(interfaces)
+
+    description_comment = f' * {description}\n' if description else ''
+    typescript_func_declaration = (
+        '/**\n' +
+        description_comment +
+        (comments_str + '\n' if comments_str else '') +
+        ' */\n' +
+        (interfaces_str + '\n\n' if interfaces_str else '') +
+        f'function {func_name}({args_str}): any {{}}'
+    )
+
+    return typescript_func_declaration
+
+def rubra_fc_v2_tool_formatter(specs: List[Dict[str, Any]]) -> str:
+    function_definitions = []
+    for spec in specs:
+        try:
+            function_definitions.append(generate_typescript_function(spec))
+        except Exception as e:
+            print(f"Error {e}")
+            print(json.dumps(spec))
+            print(specs)
+            print("=========================")
+            continue
+    
+    if len(function_definitions) == 0:
+        return ""
+    typescript_functions_str = "\n\n".join(function_definitions)
+    res = TOOL_SYSTEM_PROMPT_RUBRA.format(tool_text=typescript_functions_str)
+    return res
+
+
+
 
 def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
     function_definitions = []
@@ -418,6 +539,8 @@ class ToolFormatter(Formatter):
                 return [default_tool_formatter(tools)]
             elif self.tool_format == "rubra-fc-v1":
                 return [rubra_fc_v1_tool_formatter(tools)]
+            elif self.tool_format == "rubra-fc-v2":
+                return [rubra_fc_v2_tool_formatter(tools)]
             else:
                 raise NotImplementedError
         except Exception as e:

@@ -32,6 +32,7 @@ TOOL_SYSTEM_PROMPT = (
 TOOL_SYSTEM_PROMPT_RUBRA = (
     "You have access to the following tools:\n{tool_text}"
     "Use the following format if using a tool:\n<<functions>>[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+    "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate. Any tool call you make must match the name of a function(s) provided above."
 )
 
 

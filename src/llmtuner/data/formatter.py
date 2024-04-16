@@ -542,7 +542,7 @@ class ToolFormatter(Formatter):
                 return [rubra_fc_v1_tool_formatter(tools)]
             elif self.tool_format == "rubra-fc-v2":
                 tools_formatted = [rubra_fc_v2_tool_formatter(tools)]
-                print(tools_formatted)
+                # print(tools_formatted)
                 return tools_formatted
             else:
                 raise NotImplementedError

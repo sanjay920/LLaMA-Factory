@@ -948,6 +948,17 @@ _register_template(
 )
 
 _register_template(
+    name="mistral_rubra_v2",
+    format_user=StringFormatter(slots=["[INST] {{content}} [/INST]"]),
+    format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
+    format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
+    force_system=True,
+    format_tools=ToolFormatter(tool_format="rubra-fc-v2"),
+    format_function=StringFormatter(slots=["<<functions>>{{content}}", {"eos_token"}]),
+    format_observation=StringFormatter(slots=["[INST] <<observation>>{{content}} [/INST]"]),
+)
+
+_register_template(
     name="vicuna",
     format_user=StringFormatter(slots=["USER: {{content}} ASSISTANT:"]),
     default_system=(

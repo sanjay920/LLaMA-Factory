@@ -8,6 +8,7 @@ import transformers
 from transformers import HfArgumentParser, Seq2SeqTrainingArguments
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import is_torch_bf16_gpu_available
+from transformers.utils.versions import require_version
 
 from ..extras.logging import get_logger
 from ..extras.misc import check_dependencies, get_current_device

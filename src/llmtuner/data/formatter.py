@@ -540,7 +540,9 @@ class ToolFormatter(Formatter):
             elif self.tool_format == "rubra-fc-v1":
                 return [rubra_fc_v1_tool_formatter(tools)]
             elif self.tool_format == "rubra-fc-v2":
-                return [rubra_fc_v2_tool_formatter(tools)]
+                tools_formatted = [rubra_fc_v2_tool_formatter(tools)]
+                print(tools_formatted)
+                return tools_formatted
             else:
                 raise NotImplementedError
         except Exception as e:
@@ -553,6 +555,8 @@ class ToolFormatter(Formatter):
         if self.tool_format == "default":
             return default_tool_extractor(content)
         elif self.tool_format == "rubra-fc-v1":
+            return rubra_fc_v1_tool_extractor(content)
+        elif self.tool_format == "rubra-fc-v2":
             return rubra_fc_v1_tool_extractor(content)
         else:
             raise NotImplementedError

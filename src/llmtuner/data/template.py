@@ -935,6 +935,17 @@ _register_template(
     efficient_eos=True,
 )
 
+_register_template(
+    name="vicuna_rubra",
+    format_user=StringFormatter(slots=["USER: {{content}} ASSISTANT:"]),
+    default_system=(
+        "A chat between a curious user and an artificial intelligence assistant. "
+        "The assistant gives helpful, detailed, and polite answers to the user's questions."
+    ),
+    format_tools=ToolFormatter(tool_format="rubra-fc-v1"),
+    format_function=StringFormatter(slots=["<<functions>>{{content}}", {"eos_token"}]),
+    format_observation=StringFormatter(slots=["[INST] <<observation>>{{content}} [/INST]"]),
+)
 
 _register_template(
     name="vicuna",

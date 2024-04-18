@@ -97,6 +97,7 @@ class Template:
             elements = []
             if i == 0 and (system or tools or self.force_system):
                 tool_text = self.format_tools.apply(content=tools)[0] if tools else ""
+                print("tool text:", tool_text)
                 elements += self.format_system.apply(
                     content=(system + "\n" + tool_text)
                 )
@@ -935,6 +936,28 @@ _register_template(
     efficient_eos=True,
 )
 
+_register_template(
+    name="vicuna_rubra",
+    format_user=StringFormatter(slots=["USER: {{content}} ASSISTANT:"]),
+    default_system=(
+        "A chat between a curious user and an artificial intelligence assistant. "
+        "The assistant gives helpful, detailed, and polite answers to the user's questions."
+    ),
+    format_tools=ToolFormatter(tool_format="rubra-fc-v2"),
+    format_function=StringFormatter(slots=["<<functions>>{{content}}", {"eos_token"}]),
+    format_observation=StringFormatter(slots=["[INST] <<observation>>{{content}} [/INST]"]),
+)
+
+_register_template(
+    name="mistral_rubra_v2",
+    format_user=StringFormatter(slots=["[INST] {{content}} [/INST]"]),
+    format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
+    format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
+    force_system=True,
+    format_tools=ToolFormatter(tool_format="rubra-fc-v2"),
+    format_function=StringFormatter(slots=["<<functions>>{{content}}", {"eos_token"}]),
+    format_observation=StringFormatter(slots=["[INST] <<observation>>{{content}} [/INST]"]),
+)
 
 _register_template(
     name="vicuna",

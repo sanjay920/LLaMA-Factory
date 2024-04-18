@@ -1,4 +1,104 @@
 {
+  "rubra-functions-test-simple": {
+    "hf_hub_url": "sanjay920/functions-test-simple",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "function"
+    }
+  },
+  "basic_function_calling": {
+    "hf_hub_url": "sanjay920/basic_function_calling",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversation",
+      "tools": "functions"
+    }
+  },
+  "rubra-gptscript": {
+    "hf_hub_url": "sanjay920/gptscript-data",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "chain_of_function_v1": {
+    "hf_hub_url": "sanjay920/chain_of_function_v1",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversation",
+      "tools": "functions"
+    }
+  },
+  "persuasion": {
+    "hf_hub_url": "sanjay920/persuasion",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "system": "system"
+    }
+  },
+  "dstc8": {
+    "hf_hub_url": "sanjay920/dstc8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
+  "1million-gpt-4": {
+    "hf_hub_url": "Open-Orca/1million-gpt-4",
+    "columns": {
+      "prompt": "question",
+      "response": "response",
+      "system": "system_prompt"
+    }
+  },
+  "capybara": {
+    "hf_hub_url": "sanjay920/capybara",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "Coding_GPT4_Data": {
+    "hf_hub_url": "sanjay920/Coding_GPT4_Data-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "openhermes-functions-longest-50k": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest-50k",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "metamathqa": {
+    "hf_hub_url": "sanjay920/MetaMathQA-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "systemchat": {
+    "hf_hub_url": "sanjay920/systemchat-functions",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "dstc8": {
+    "hf_hub_url": "sanjay920/dstc8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
   "rubra-functions-rest": {
     "hf_hub_url": "sanjay920/functions-rest-processed",
     "formatting": "sharegpt",
@@ -56,9 +156,8 @@
       "system": "system"
     }
   },
-  "rubra-functions": {
-    "file_name": "rubra-functions-v0.json",
-    "file_sha1": "4e7d40aa818f7b551bd4a6cf71155c5d0e46017249867efb28af2d871644a1c8",
+  "rubra-functions-openhermes-longest": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -66,8 +165,26 @@
       "system": "system"
     }
   },
-  "rubra-gptscript": {
-    "file_name": "gptscript-functions.json",
+  "rubra-functions-openhermes-longest-50k": {
+    "hf_hub_url": "sanjay920/openhermes-functions-longest-50k",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions-gptscript": {
+    "hf_hub_url": "sanjay920/functions-gptscript",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "rubra-functions": {
+    "file_name": "rubra-functions-v0.json",
     "file_sha1": "4e7d40aa818f7b551bd4a6cf71155c5d0e46017249867efb28af2d871644a1c8",
     "formatting": "sharegpt",
     "columns": {
@@ -134,7 +251,7 @@
     "file_sha1": "2ba9827122c158dc256668d42bd1bcb8bc6b786e"
   },
   "alpaca_gpt4_en": {
-    "file_name": "alpaca_gpt4_data_en.json",
+    "file_name": "c.json",
     "file_sha1": "647f4ad447bd993e4b6b6223d1be15208bab694a"
   },
   "alpaca_gpt4_zh": {

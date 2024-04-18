@@ -7,6 +7,14 @@
       "tools": "function"
     }
   },
+  "basic_function_calling": {
+    "hf_hub_url": "sanjay920/basic_function_calling",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversation",
+      "tools": "functions"
+    }
+  },
   "rubra-gptscript": {
     "hf_hub_url": "sanjay920/gptscript-data",
     "formatting": "sharegpt",

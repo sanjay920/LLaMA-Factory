@@ -97,6 +97,7 @@ class Template:
             elements = []
             if i == 0 and (system or tools or self.force_system):
                 tool_text = self.format_tools.apply(content=tools)[0] if tools else ""
+                print("tool text:", tool_text)
                 elements += self.format_system.apply(
                     content=(system + "\n" + tool_text)
                 )

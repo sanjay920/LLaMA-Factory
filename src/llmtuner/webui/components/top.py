@@ -1,18 +1,21 @@
-from typing import TYPE_CHECKING, Dict, Tuple
-
-import gradio as gr
+from typing import TYPE_CHECKING, Dict
 
 from ...data import templates
 from ...extras.constants import METHODS, SUPPORTED_MODELS
+from ...extras.packages import is_gradio_available
 from ..common import get_model_path, get_template, list_adapters, save_config
 from ..utils import can_quantize
+
+
+if is_gradio_available():
+    import gradio as gr
 
 
 if TYPE_CHECKING:
     from gradio.components import Component
 
 
-def create_top() -> Tuple["gr.Dropdown", Dict[str, "Component"]]:
+def create_top() -> Dict[str, "Component"]:
     available_models = list(SUPPORTED_MODELS.keys()) + ["Custom"]
 
     with gr.Row():
@@ -25,7 +28,7 @@ def create_top() -> Tuple["gr.Dropdown", Dict[str, "Component"]]:
         adapter_path = gr.Dropdown(multiselect=True, allow_custom_value=True, scale=5)
         refresh_btn = gr.Button(scale=1)
 
-    with gr.Accordion(label="Advanced config", open=False) as advanced_tab:
+    with gr.Accordion(open=False) as advanced_tab:
         with gr.Row():
             quantization_bit = gr.Dropdown(choices=["none", "8", "4"], value="none")
             template = gr.Dropdown(choices=list(templates.keys()), value="default")
@@ -44,7 +47,7 @@ def create_top() -> Tuple["gr.Dropdown", Dict[str, "Component"]]:
 
     refresh_btn.click(list_adapters, [model_name, finetuning_type], [adapter_path], queue=False)
 
-    return lang, dict(
+    return dict(
         lang=lang,
         model_name=model_name,
         model_path=model_path,

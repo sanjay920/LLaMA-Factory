@@ -7,11 +7,43 @@
       "tools": "function"
     }
   },
+  "rubra-functions-all": {
+    "hf_hub_url": "sanjay920/functions-all",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "rubra-functions-all-sample5000": {
+    "hf_hub_url": "sanjay920/functions-all-sample5000",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
   "basic_function_calling": {
     "hf_hub_url": "sanjay920/basic_function_calling",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversation",
+      "tools": "functions"
+    }
+  },
+  "basic_function_calling_expanded": {
+    "hf_hub_url": "sanjay920/basic_function_calling_expanded",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "basic_function_calling_expanded_x8": {
+    "hf_hub_url": "sanjay920/basic_function_calling_expanded_x8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
       "tools": "functions"
     }
   },
@@ -24,11 +56,28 @@
       "system": "system"
     }
   },
+  "gptscript-data_x8": {
+    "hf_hub_url": "sanjay920/gptscript-data_x8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions",
+      "system": "system"
+    }
+  },
   "chain_of_function_v1": {
     "hf_hub_url": "sanjay920/chain_of_function_v1",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversation",
+      "tools": "functions"
+    }
+  },
+  "chain_of_function_v1_expanded": {
+    "hf_hub_url": "sanjay920/chain_of_function_v1_expanded",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
       "tools": "functions"
     }
   },
@@ -58,6 +107,13 @@
   },
   "capybara": {
     "hf_hub_url": "sanjay920/capybara",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "capybara-expanded": {
+    "hf_hub_url": "sanjay920/capybara-expanded",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations"

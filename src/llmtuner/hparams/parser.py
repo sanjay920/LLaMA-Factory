@@ -82,6 +82,9 @@ def _check_extra_dependencies(
     if model_args.use_unsloth:
         require_version("unsloth", "Please install unsloth: https://github.com/unslothai/unsloth")
 
+    if model_args.mixture_of_depths is not None:
+        require_version("mixture-of-depth>=1.1.6", "To fix: pip install mixture-of-depth>=1.1.6")
+
     if model_args.infer_backend == "vllm":
         require_version("vllm>=0.3.3", "To fix: pip install vllm>=0.3.3")
 
@@ -90,6 +93,9 @@ def _check_extra_dependencies(
 
     if finetuning_args.use_badam:
         require_version("badam", "To fix: pip install badam")
+
+    if finetuning_args.plot_loss:
+        require_version("matplotlib", "To fix: pip install matplotlib")
 
     if training_args is not None and training_args.predict_with_generate:
         require_version("jieba", "To fix: pip install jieba")

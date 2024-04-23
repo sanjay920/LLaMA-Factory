@@ -28,6 +28,8 @@ LOG_FILE_NAME = "trainer_log.jsonl"
 
 METHODS = ["full", "freeze", "lora"]
 
+MOD_SUPPORTED_MODELS = ["bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"]
+
 PEFT_METHODS = ["lora"]
 
 # SUBJECTS = ["Average", "STEM", "Social Sciences", "Humanities", "Other"]
@@ -650,6 +652,20 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/phi-2",
         },
     }
+)
+
+
+register_model_group(
+    models={
+        "Phi3-3.8B-4k-Chat": {
+            DownloadSource.DEFAULT: "microsoft/Phi-3-mini-4k-instruct",
+        },
+        "Phi3-3.8B-128k-Chat": {
+            DownloadSource.DEFAULT: "microsoft/Phi-3-mini-128k-instruct",
+        },
+    },
+    module="qkv_proj",
+    template="phi",
 )
 
 

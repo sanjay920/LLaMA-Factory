@@ -454,7 +454,7 @@ def get_template_and_fix_tokenizer(
     name: Optional[str] = None,
 ) -> Template:
     if name is None:
-        template = templates["vanilla"]  # placeholder
+        template = templates["empty"]  # placeholder
     else:
         template = templates.get(name, None)
         if template is None:
@@ -502,7 +502,7 @@ _register_template(
     format_separator=EmptyFormatter(slots=["\n\n"]),
     default_system=(
         "Below is an instruction that describes a task. "
-        "Write a response that appropriately completes the request."
+        "Write a response that appropriately completes the request.\n\n"
     ),
 )
 
@@ -754,6 +754,13 @@ _register_template(
 
 
 _register_template(
+    name="fewshot",
+    format_separator=EmptyFormatter(slots=["\n\n"]),
+    efficient_eos=True,
+)
+
+
+_register_template(
     name="gemma",
     format_user=StringFormatter(
         slots=["<start_of_turn>user\n{{content}}<end_of_turn>\n<start_of_turn>model\n"]
@@ -923,6 +930,15 @@ _register_template(
     ),
     format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
     force_system=True,
+)
+
+
+_register_template(
+    name="phi",
+    format_user=StringFormatter(slots=["<|user|>\n{{content}}<|end|>\n<|assistant|>\n"]),
+    format_system=StringFormatter(slots=[{"bos_token"}, "<|system|>\n{{content}}<|end|>\n"]),
+    format_separator=EmptyFormatter(slots=["<|end|>\n"]),
+    default_system="You are a helpful AI assistant.",
 )
 
 

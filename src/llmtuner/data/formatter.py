@@ -502,7 +502,6 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
     print("content:", content)
 
     if not matches:
-    if not matches:
         return content
 
     try:

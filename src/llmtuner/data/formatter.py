@@ -4,7 +4,18 @@ import ast
 import ast
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Union, TypedDict
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+    TypedDict,
+)
 
 
 SLOTS = Sequence[Union[str, Set[str], Dict[str, str]]]
@@ -22,18 +33,20 @@ TOOL_SYSTEM_PROMPT = (
     "```\n"
 )
 
-# TOOL_SYSTEM_PROMPT_RUBRA = (
-#     "You have access to the following functions/tools:\n{tool_text}"
-#     "Use the following format if using a tool:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
-#     "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate."
-#     "Any tool call you make must match the name of a function(s) provided above."
-# )
-
 TOOL_SYSTEM_PROMPT_RUBRA = (
     "You have access to the following tools:\n{tool_text}"
     "Use the following format if using a tool:\n<<functions>>[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
     "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate. Any tool call you make must match the name of a function(s) provided above."
 )
+
+TOOL_SYSTEM_PROMPT_RUBRA_LLAMA3 = (
+    "You have access to the following tools:\n{tool_text}"
+    "Respond directly to user queries with accurate and relevant information first. If the user's question directly implies the need for a specific tool or additional data that a tool can provide, then consider using the appropriate tool."
+    "When using a tool, format your command as follows:\n[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+    "Always ensure tool use is essential and directly applicable to what the user has asked for. Do not suggest tool use unless it clearly adds value to the response or if the user specifically requests it."
+    "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
+)
+
 
 TOOL_SYSTEM_PROMPT_RUBRA_PYTHON_V1 = (
     "You have access to the following tools, which you can use to perform specific actions:\n{tool_text}"
@@ -50,24 +63,31 @@ def rubra_python_v1_type_mapping(json_type: str, item_schema=None):
         "object": "Dict[str, Any]",
         "array": "List",
         "boolean": "bool",
-        "null": "NoneType"
+        "null": "NoneType",
     }
-    if json_type == 'array' and item_schema:
-        item_type = rubra_python_v1_type_mapping(item_schema.get('type', 'any'), item_schema.get('items'))
+    if json_type == "array" and item_schema:
+        item_type = rubra_python_v1_type_mapping(
+            item_schema.get("type", "any"), item_schema.get("items")
+        )
         return f"List[{item_type}]"
-    return base_types.get(json_type, 'Any')
+    return base_types.get(json_type, "Any")
+
 
 def rubra_python_v1_generate_python_types(schema, name_prefix, required_fields):
-    properties = schema.get('properties', {})
+    properties = schema.get("properties", {})
     type_definitions = []
     type_annotations = {}
 
     for prop_name, prop_schema in properties.items():
-        prop_type = rubra_python_v1_type_mapping(prop_schema['type'], prop_schema.get('items'))
-        if prop_schema['type'] == 'object':
+        prop_type = rubra_python_v1_type_mapping(
+            prop_schema["type"], prop_schema.get("items")
+        )
+        if prop_schema["type"] == "object":
             nested_name = f"{name_prefix}_{prop_name.capitalize()}Params"
-            nested_required = prop_schema.get('required', [])
-            nested_types, nested_annotations = rubra_python_v1_generate_python_types(prop_schema, nested_name, nested_required)
+            nested_required = prop_schema.get("required", [])
+            nested_types, nested_annotations = rubra_python_v1_generate_python_types(
+                prop_schema, nested_name, nested_required
+            )
             type_definitions.extend(nested_types)
             prop_type = nested_name
         is_optional = prop_name not in required_fields
@@ -76,28 +96,36 @@ def rubra_python_v1_generate_python_types(schema, name_prefix, required_fields):
     type_definitions.append((name_prefix, type_annotations))
     return type_definitions, type_annotations
 
+
 def rubra_python_v1_generate_python_function(function_schema):
     func_name = function_schema.get("name", "unnamed_function")
     description = function_schema.get("description", "No description provided.")
-    parameters = function_schema.get('parameters', {})
-    required_params = parameters.get('required', [])
+    parameters = function_schema.get("parameters", {})
+    required_params = parameters.get("required", [])
 
-    type_defs, _ = rubra_python_v1_generate_python_types(parameters, func_name.capitalize() + 'Params', required_params)
+    type_defs, _ = rubra_python_v1_generate_python_types(
+        parameters, func_name.capitalize() + "Params", required_params
+    )
     function_args = []
     docstring_lines = ['"""', description]
     typed_dict_definitions = []
 
     for type_name, annotations in type_defs:
-        if type_name == func_name.capitalize() + 'Params':
+        if type_name == func_name.capitalize() + "Params":
             for param, (param_type, is_optional) in annotations.items():
                 default_value = " = None" if is_optional else ""
                 function_args.append(f"{param}: {param_type}{default_value}")
-                param_description = parameters['properties'][param].get("description", "No description provided.")
+                param_description = parameters["properties"][param].get(
+                    "description", "No description provided."
+                )
                 docstring_lines.append(f":param {param}: {param_description}")
         else:
             # Define type alias
             fields = ", ".join(f"{k}: {v[0]}" for k, v in annotations.items())
-            typed_dict_definitions.append(f"class {type_name}(TypedDict, total=False):\n    " + "\n    ".join(f"{k}: {v[0]}" for k, v in annotations.items()))
+            typed_dict_definitions.append(
+                f"class {type_name}(TypedDict, total=False):\n    "
+                + "\n    ".join(f"{k}: {v[0]}" for k, v in annotations.items())
+            )
 
     docstring_lines.append('"""')
     docstring = "\n    ".join(docstring_lines)
@@ -105,6 +133,7 @@ def rubra_python_v1_generate_python_function(function_schema):
     function_definition = f"def {func_name}({args_str}) -> Any:\n    {docstring}\n"
 
     return "\n".join(typed_dict_definitions) + "\n" + function_definition
+
 
 def rubra_python_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
     function_definitions = []
@@ -116,68 +145,83 @@ def rubra_python_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
             print(f"Error {e}")
             print(spec)
             continue
-    
+
     python_functions_str = "\n".join(function_definitions)
     res = TOOL_SYSTEM_PROMPT_RUBRA_PYTHON_V1.format(tool_text=python_functions_str)
     return res
 
-def json_schema_to_typescript_type(schema, param_name):
-    ts_type = 'any'  # default type
-    enum_comment = ''
-    integer_comment = ''
-    description_comment = ''
-    
-    if isinstance(schema, dict) and 'type' in schema:
-        json_type = schema['type']
-        if json_type == 'array':
-            item_type = 'any' if 'items' not in schema else json_schema_to_typescript_type(schema['items'], param_name)[0]
-            ts_type = f'{item_type}[]'
-        elif json_type == 'number':
-            ts_type = 'number'
-        elif json_type == 'integer':
-            ts_type = 'number'  # TypeScript doesn't differentiate between number and integer
-            integer_comment = f' * @param {param_name} - Integer'
-        elif json_type == 'object':
-            ts_type, _ = generate_typescript_interface(schema, param_name)
-        elif json_type == 'boolean':
-            ts_type = 'boolean'
-        elif json_type == 'null':
-            ts_type = 'null'
-        elif json_type == 'string':
-            ts_type = 'string'
 
-    if 'enum' in schema:
-        enum_comment = f' * @enum {param_name} - Possible values: ' + ', '.join([f'"{enum_value}"' for enum_value in schema['enum']])
-        ts_type = 'string'
-    if 'description' in schema:
+def json_schema_to_typescript_type(schema, param_name):
+    ts_type = "any"  # default type
+    enum_comment = ""
+    integer_comment = ""
+    description_comment = ""
+
+    if isinstance(schema, dict) and "type" in schema:
+        json_type = schema["type"]
+        if json_type == "array":
+            item_type = (
+                "any"
+                if "items" not in schema
+                else json_schema_to_typescript_type(schema["items"], param_name)[0]
+            )
+            ts_type = f"{item_type}[]"
+        elif json_type == "number":
+            ts_type = "number"
+        elif json_type == "integer":
+            ts_type = (
+                "number"  # TypeScript doesn't differentiate between number and integer
+            )
+            integer_comment = f" * @param {param_name} - Integer"
+        elif json_type == "object":
+            ts_type, _ = generate_typescript_interface(schema, param_name)
+        elif json_type == "boolean":
+            ts_type = "boolean"
+        elif json_type == "null":
+            ts_type = "null"
+        elif json_type == "string":
+            ts_type = "string"
+
+    if "enum" in schema:
+        enum_comment = f" * @enum {param_name} - Possible values: " + ", ".join(
+            [f'"{enum_value}"' for enum_value in schema["enum"]]
+        )
+        ts_type = "string"
+    if "description" in schema:
         description_comment = f' * @param {param_name} - {schema["description"]}'
 
     # Return only the type for nested objects to avoid duplicating comments
-    if isinstance(schema, dict) and schema.get('type') == 'object':
-        return ts_type, '', '', ''
-    
+    if isinstance(schema, dict) and schema.get("type") == "object":
+        return ts_type, "", "", ""
+
     return ts_type, enum_comment, integer_comment, description_comment
 
 
 def generate_typescript_interface(schema, interface_name):
-    properties = schema.get('properties', {})
-    required = schema.get('required', [])
-    
+    properties = schema.get("properties", {})
+    required = schema.get("required", [])
+
     interface_body = []
     descriptions = []
     for prop_name, prop_schema in properties.items():
-        prop_type, enum_comment, integer_comment, description_comment = json_schema_to_typescript_type(prop_schema, prop_name)
+        prop_type, enum_comment, integer_comment, description_comment = (
+            json_schema_to_typescript_type(prop_schema, prop_name)
+        )
         is_optional = prop_name not in required
-        interface_body.append(f'    {prop_name}{"?" if is_optional else ""}: {prop_type};')
+        interface_body.append(
+            f'    {prop_name}{"?" if is_optional else ""}: {prop_type};'
+        )
         if description_comment:
             descriptions.append(description_comment)
         if enum_comment:
             descriptions.append(enum_comment)
         if integer_comment:
             descriptions.append(integer_comment)
-    
+
     comments = "\n".join(descriptions)
-    interface_definition = f'interface {interface_name} {{\n' + "\n".join(interface_body) + '\n}'
+    interface_definition = (
+        f"interface {interface_name} {{\n" + "\n".join(interface_body) + "\n}"
+    )
     return interface_definition, comments
 
 
@@ -185,33 +229,38 @@ def convert_parameters_list_to_dict(parameters):
     properties = {}
     required = []
     for param in parameters:
-        properties[param['name']] = param
-        if 'default' not in param:
-            required.append(param['name'])
-    return {'properties': properties, 'required': required}
+        properties[param["name"]] = param
+        if "default" not in param:
+            required.append(param["name"])
+    return {"properties": properties, "required": required}
+
 
 def generate_typescript_function(function_schema):
-    func_name = function_schema['name']
-    description = function_schema.get('description', '')
-    
+    func_name = function_schema["name"]
+    description = function_schema.get("description", "")
+
     # Check if parameters is a list and convert if necessary
-    parameters_info = function_schema.get('parameters', {})
+    parameters_info = function_schema.get("parameters", {})
     if isinstance(parameters_info, list):
         parameters_info = convert_parameters_list_to_dict(parameters_info)
-        
-    parameters_schema = parameters_info.get('properties', {})
-    required_params = parameters_info.get('required', [])
+
+    parameters_schema = parameters_info.get("properties", {})
+    required_params = parameters_info.get("required", [])
 
     args_list = []
     comments_list = []
     interfaces = []
     for param_name, param_schema in parameters_schema.items():
-        ts_type, enum_comment, integer_comment, description_comment = json_schema_to_typescript_type(param_schema, param_name)
-        if ts_type.startswith('interface'):
-            interface_definition, nested_comments = generate_typescript_interface(param_schema, f'{func_name}_{param_name.capitalize()}Params')
+        ts_type, enum_comment, integer_comment, description_comment = (
+            json_schema_to_typescript_type(param_schema, param_name)
+        )
+        if ts_type.startswith("interface"):
+            interface_definition, nested_comments = generate_typescript_interface(
+                param_schema, f"{func_name}_{param_name.capitalize()}Params"
+            )
             interfaces.append(interface_definition)
             comments_list.append(nested_comments)
-            ts_type = f'{func_name}_{param_name.capitalize()}Params'
+            ts_type = f"{func_name}_{param_name.capitalize()}Params"
         else:
             if description_comment:
                 comments_list.append(description_comment)
@@ -226,14 +275,14 @@ def generate_typescript_function(function_schema):
     comments_str = "\n".join(comments_list)
     interfaces_str = "\n\n".join(interfaces)
 
-    description_comment = f' * {description}\n' if description else ''
+    description_comment = f" * {description}\n" if description else ""
     typescript_func_declaration = (
-        '/**\n' +
-        description_comment +
-        (comments_str + '\n' if comments_str else '') +
-        ' */\n' +
-        (interfaces_str + '\n\n' if interfaces_str else '') +
-        f'function {func_name}({args_str}): any {{}}'
+        "/**\n"
+        + description_comment
+        + (comments_str + "\n" if comments_str else "")
+        + " */\n"
+        + (interfaces_str + "\n\n" if interfaces_str else "")
+        + f"function {func_name}({args_str}): any {{}}"
     )
 
     return typescript_func_declaration
@@ -250,7 +299,7 @@ def rubra_fc_v2_tool_formatter(specs: List[Dict[str, Any]]) -> str:
             print(specs)
             print("=========================")
             continue
-    
+
     if len(function_definitions) == 0:
         return ""
     typescript_functions_str = "\n\n".join(function_definitions)
@@ -258,6 +307,23 @@ def rubra_fc_v2_tool_formatter(specs: List[Dict[str, Any]]) -> str:
     return res
 
 
+def rubra_fc_v2_tool_formatter_llama3(specs: List[Dict[str, Any]]) -> str:
+    function_definitions = []
+    for spec in specs:
+        try:
+            function_definitions.append(generate_typescript_function(spec))
+        except Exception as e:
+            print(f"LLama3 tool Formatter Error {e}")
+            print(json.dumps(spec))
+            print(specs)
+            print("=========================")
+            continue
+
+    if len(function_definitions) == 0:
+        return ""
+    typescript_functions_str = "\n\n".join(function_definitions)
+    res = TOOL_SYSTEM_PROMPT_RUBRA_LLAMA3.format(tool_text=typescript_functions_str)
+    return res
 
 
 def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
@@ -287,23 +353,32 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
                 print("Converted", spec)
 
             func_name = spec.get("name", "unnamed_function")
-            description = spec.get("description", "No description provided.") or "No description provided."
+            description = (
+                spec.get("description", "No description provided.")
+                or "No description provided."
+            )
 
             prop_dict = {}
             required_params = []
 
-            parameters = spec.get('parameters')
-            if parameters and isinstance(parameters, dict) and 'properties' in parameters:
-                temp_properties = parameters['properties']
-                if isinstance(temp_properties, dict) and ('required' in temp_properties or 'optional' in temp_properties):
-                    for status in ['required', 'optional']:
+            parameters = spec.get("parameters")
+            if (
+                parameters
+                and isinstance(parameters, dict)
+                and "properties" in parameters
+            ):
+                temp_properties = parameters["properties"]
+                if isinstance(temp_properties, dict) and (
+                    "required" in temp_properties or "optional" in temp_properties
+                ):
+                    for status in ["required", "optional"]:
                         for item in temp_properties.get(status, []):
-                            item['required'] = (status == 'required')
-                            prop_dict[item['name']] = item
+                            item["required"] = status == "required"
+                            prop_dict[item["name"]] = item
                 elif isinstance(temp_properties, list):
                     for item in temp_properties:
-                        if isinstance(item, dict) and 'name' in item:
-                            prop_dict[item['name']] = item
+                        if isinstance(item, dict) and "name" in item:
+                            prop_dict[item["name"]] = item
                 elif isinstance(temp_properties, dict):
                     prop_dict = temp_properties
                 else:
@@ -312,19 +387,27 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
                 print(f"No parameters defined for function {func_name}.")
                 continue  # Skip further processing for this function
 
-            if 'required' in parameters and isinstance(parameters['required'], list):
-                required_params = parameters['required']
+            if "required" in parameters and isinstance(parameters["required"], list):
+                required_params = parameters["required"]
 
             func_args = []
             for param, details in prop_dict.items():
                 param_type = details.get("type", "Any")
-                python_type = type_mapping.get(param_type.lower(), "Any") if isinstance(param_type, str) else "Any"
-                is_required = details.get('required', False)
+                python_type = (
+                    type_mapping.get(param_type.lower(), "Any")
+                    if isinstance(param_type, str)
+                    else "Any"
+                )
+                is_required = details.get("required", False)
             func_args = []
             for param, details in prop_dict.items():
                 param_type = details.get("type", "Any")
-                python_type = type_mapping.get(param_type.lower(), "Any") if isinstance(param_type, str) else "Any"
-                is_required = details.get('required', False)
+                python_type = (
+                    type_mapping.get(param_type.lower(), "Any")
+                    if isinstance(param_type, str)
+                    else "Any"
+                )
+                is_required = details.get("required", False)
 
                 arg_str = f"{param}: {python_type}"
                 if not is_required:
@@ -343,9 +426,13 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
             docstring_lines = ['"""', description]
             for param, details in prop_dict.items():
                 param_type = details.get("type", "Any")
-                python_type = type_mapping.get(param_type.lower(), "Any") if isinstance(param_type, str) else "Any"
-                is_required = details.get('required', False)
-                enum_values = details.get('enum')
+                python_type = (
+                    type_mapping.get(param_type.lower(), "Any")
+                    if isinstance(param_type, str)
+                    else "Any"
+                )
+                is_required = details.get("required", False)
+                enum_values = details.get("enum")
 
                 # Handle enum values by creating a tuple of possible values for the type hint
                 if enum_values:
@@ -361,20 +448,33 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
                 func_args.append(arg_str)
 
                 # Update docstring with enum values if present
-                param_description = details.get("description", "No description provided.")
+                param_description = details.get(
+                    "description", "No description provided."
+                )
                 if enum_values:
                     # Format enum values for the docstring, adding quotes if they are strings
-                    formatted_enum_values = [f'"{value}"' if isinstance(value, str) else str(value) for value in enum_values]
-                    param_description += f" (Possible values: {', '.join(formatted_enum_values)})"
+                    formatted_enum_values = [
+                        f'"{value}"' if isinstance(value, str) else str(value)
+                        for value in enum_values
+                    ]
+                    param_description += (
+                        f" (Possible values: {', '.join(formatted_enum_values)})"
+                    )
                 required_text = "" if is_required else "(Optional)"
-                docstring_lines.append(f":param {param}: {param_description} {required_text}")
+                docstring_lines.append(
+                    f":param {param}: {param_description} {required_text}"
+                )
             func_args_str = ", ".join(func_args) if func_args else ""
             docstring_lines = ['"""', description]
             for param, details in prop_dict.items():
                 param_type = details.get("type", "Any")
-                python_type = type_mapping.get(param_type.lower(), "Any") if isinstance(param_type, str) else "Any"
-                is_required = details.get('required', False)
-                enum_values = details.get('enum')
+                python_type = (
+                    type_mapping.get(param_type.lower(), "Any")
+                    if isinstance(param_type, str)
+                    else "Any"
+                )
+                is_required = details.get("required", False)
+                enum_values = details.get("enum")
 
                 # Handle enum values by creating a tuple of possible values for the type hint
                 if enum_values:
@@ -390,13 +490,22 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
                 func_args.append(arg_str)
 
                 # Update docstring with enum values if present
-                param_description = details.get("description", "No description provided.")
+                param_description = details.get(
+                    "description", "No description provided."
+                )
                 if enum_values:
                     # Format enum values for the docstring, adding quotes if they are strings
-                    formatted_enum_values = [f'"{value}"' if isinstance(value, str) else str(value) for value in enum_values]
-                    param_description += f" (Possible values: {', '.join(formatted_enum_values)})"
+                    formatted_enum_values = [
+                        f'"{value}"' if isinstance(value, str) else str(value)
+                        for value in enum_values
+                    ]
+                    param_description += (
+                        f" (Possible values: {', '.join(formatted_enum_values)})"
+                    )
                 required_text = "" if is_required else "(Optional)"
-                docstring_lines.append(f":param {param}: {param_description} {required_text}")
+                docstring_lines.append(
+                    f":param {param}: {param_description} {required_text}"
+                )
 
             docstring_lines.append('"""')
             docstring = "\n    ".join(docstring_lines)
@@ -412,8 +521,48 @@ def rubra_fc_v1_tool_formatter(specs: List[Dict[str, Any]]) -> str:
             continue
             continue
 
-    res = TOOL_SYSTEM_PROMPT_RUBRA.format( tool_text="\n".join(function_definitions))
+    res = TOOL_SYSTEM_PROMPT_RUBRA.format(tool_text="\n".join(function_definitions))
     return res
+
+
+def default_tool_formatter(tools: List[Dict[str, Any]]) -> str:
+    tool_text = ""
+    tool_names = []
+    for tool in tools:
+        param_text = ""
+        for name, param in tool["parameters"]["properties"].items():
+            required = (
+                ", required" if name in tool["parameters"].get("required", []) else ""
+            )
+            enum = (
+                ", should be one of [{}]".format(", ".join(param["enum"]))
+                if param.get("enum", None)
+                else ""
+            )
+            items = (
+                ", where each item should be {}".format(param["items"].get("type", ""))
+                if param.get("items")
+                else ""
+            )
+            param_text += "  - {name} ({type}{required}): {desc}{enum}{items}\n".format(
+                name=name,
+                type=param.get("type", ""),
+                required=required,
+                desc=param.get("description", ""),
+                enum=enum,
+                items=items,
+            )
+
+        tool_text += "> Tool Name: {name}\nTool Description: {desc}\nTool Args:\n{args}\n".format(
+            name=tool["name"], desc=tool.get("description", ""), args=param_text
+        )
+        tool_names.append(tool["name"])
+
+    return TOOL_SYSTEM_PROMPT.format(
+        tool_text=tool_text,
+        tool_names=", ".join(tool_names),
+        format_prompt=JSON_FORMAT_PROMPT,
+    )
 
 
 def default_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
@@ -433,19 +582,19 @@ def default_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
 
 
 def parse_function_call(call):
-    func_name, args_str = call.split('(', 1)
-    args_str = args_str.rstrip(')')
-    args_list = args_str.split(',')
+    func_name, args_str = call.split("(", 1)
+    args_str = args_str.rstrip(")")
+    args_list = args_str.split(",")
     args_dict = {}
     for arg in args_list:
-        key, value = arg.split('=')
+        key, value = arg.split("=")
         key = key.strip()
         value = value.strip()
         try:
             # Use ast.literal_eval to safely parse the string to its Python type
             parsed_value = ast.literal_eval(value)
         except ValueError as e:
-            # If parsing fails, keep the original string. 
+            # If parsing fails, keep the original string.
             # This might happen if the value is a string that's not quoted as a Python literal.
             print(f"Error parsing value {value}: {e}")
             parsed_value = value
@@ -454,19 +603,19 @@ def parse_function_call(call):
 
 
 def parse_function_call(call):
-    func_name, args_str = call.split('(', 1)
-    args_str = args_str.rstrip(')')
-    args_list = args_str.split(',')
+    func_name, args_str = call.split("(", 1)
+    args_str = args_str.rstrip(")")
+    args_list = args_str.split(",")
     args_dict = {}
     for arg in args_list:
-        key, value = arg.split('=')
+        key, value = arg.split("=")
         key = key.strip()
         value = value.strip()
         try:
             # Use ast.literal_eval to safely parse the string to its Python type
             parsed_value = ast.literal_eval(value)
         except ValueError as e:
-            # If parsing fails, keep the original string. 
+            # If parsing fails, keep the original string.
             # This might happen if the value is a string that's not quoted as a Python literal.
             print(f"Error parsing value {value}: {e}")
             parsed_value = value
@@ -475,19 +624,19 @@ def parse_function_call(call):
 
 
 def parse_function_call(call):
-    func_name, args_str = call.split('(', 1)
-    args_str = args_str.rstrip(')')
-    args_list = args_str.split(',')
+    func_name, args_str = call.split("(", 1)
+    args_str = args_str.rstrip(")")
+    args_list = args_str.split(",")
     args_dict = {}
     for arg in args_list:
-        key, value = arg.split('=')
+        key, value = arg.split("=")
         key = key.strip()
         value = value.strip()
         try:
             # Use ast.literal_eval to safely parse the string to its Python type
             parsed_value = ast.literal_eval(value)
         except ValueError as e:
-            # If parsing fails, keep the original string. 
+            # If parsing fails, keep the original string.
             # This might happen if the value is a string that's not quoted as a Python literal.
             print(f"Error parsing value {value}: {e}")
             parsed_value = value
@@ -508,11 +657,11 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
         result_dicts = []
         for match in matches:
             # Splitting each function call from the match. We add ')' back because it was used as a delimiter
-            function_calls = [f"{func})" for func in match.split('),') if func]
+            function_calls = [f"{func})" for func in match.split("),") if func]
             print(function_calls)
             for function_call in function_calls:
                 # Removing the trailing ')' that was added for the last function call
-                if function_call.endswith(')'):
+                if function_call.endswith(")"):
                     function_call = function_call[:-1]
                 result_dict = parse_function_call(function_call.strip())
                 result_dicts.append(result_dict)
@@ -524,11 +673,11 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
         result_dicts = []
         for match in matches:
             # Splitting each function call from the match. We add ')' back because it was used as a delimiter
-            function_calls = [f"{func})" for func in match.split('),') if func]
+            function_calls = [f"{func})" for func in match.split("),") if func]
             print(function_calls)
             for function_call in function_calls:
                 # Removing the trailing ')' that was added for the last function call
-                if function_call.endswith(')'):
+                if function_call.endswith(")"):
                     function_call = function_call[:-1]
                 result_dict = parse_function_call(function_call.strip())
                 result_dicts.append(result_dict)
@@ -540,11 +689,11 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
         result_dicts = []
         for match in matches:
             # Splitting each function call from the match. We add ')' back because it was used as a delimiter
-            function_calls = [f"{func})" for func in match.split('),') if func]
+            function_calls = [f"{func})" for func in match.split("),") if func]
             print(function_calls)
             for function_call in function_calls:
                 # Removing the trailing ')' that was added for the last function call
-                if function_call.endswith(')'):
+                if function_call.endswith(")"):
                     function_call = function_call[:-1]
                 result_dict = parse_function_call(function_call.strip())
                 result_dicts.append(result_dict)
@@ -553,6 +702,7 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
     except Exception as e:
         print(f"Exception {e}")
         return content
+
 
 def rubra_fc_v2_tool_extractor(content: str):
     # Regex to extract content within <<functions>>[...]
@@ -566,10 +716,10 @@ def rubra_fc_v2_tool_extractor(content: str):
     result_dicts = []
     for match in matches:
         # Wrap the extracted string in brackets if it's not a list format expected by ast.parse
-        if not match.strip().startswith('['):
-            match = f'[{match}]'
+        if not match.strip().startswith("["):
+            match = f"[{match}]"
         try:
-            parsed = ast.parse(match, mode='eval')
+            parsed = ast.parse(match, mode="eval")
         except SyntaxError as e:
             print(f"Syntax error while parsing functions: {e}\n", content)
             continue
@@ -592,6 +742,7 @@ def rubra_fc_v2_tool_extractor(content: str):
 
     # Convert result dictionaries to JSON
     return json.dumps(result_dicts, ensure_ascii=False)
+
 
 @dataclass
 class Formatter(ABC):
@@ -717,6 +868,10 @@ class ToolFormatter(Formatter):
                 tools_formatted = [rubra_fc_v2_tool_formatter(tools)]
                 # print(tools_formatted)
                 return tools_formatted
+            elif self.tool_format == "rubra-fc-v2-llama3":
+                tools_formatted = [rubra_fc_v2_tool_formatter_llama3(tools)]
+                # print(tools_formatted)
+                return tools_formatted
             elif self.tool_format == "rubra_python_v1_tool_formatter":
                 tools_formatted = [rubra_python_v1_tool_formatter(tools)]
                 # print(tools_formatted)
@@ -730,13 +885,13 @@ class ToolFormatter(Formatter):
 
     def extract(self, content: str) -> Union[str, Tuple[str, str]]:
         # print("tool_format", self.tool_format)
-        # print("tool_format", self.tool_format)
-        # print("tool_format", self.tool_format)
         if self.tool_format == "default":
             return default_tool_extractor(content)
         elif self.tool_format == "rubra-fc-v1":
             return rubra_fc_v1_tool_extractor(content)
         elif self.tool_format == "rubra-fc-v2":
+            return rubra_fc_v2_tool_extractor(content)
+        elif self.tool_format == "rubra-fc-v2-llama3":
             return rubra_fc_v2_tool_extractor(content)
         elif self.tool_format == "rubra_python_v1_tool_formatter":
             return rubra_fc_v2_tool_extractor(content)

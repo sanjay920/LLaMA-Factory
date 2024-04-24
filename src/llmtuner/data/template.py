@@ -849,6 +849,36 @@ _register_template(
 
 
 _register_template(
+    name="llama3_rubra",
+    format_user=StringFormatter(
+        slots=[
+                "<|start_header_id|>user<|end_header_id|>\n\n{{content}}<|eot_id|>"
+        ]
+    ),
+    format_system=StringFormatter(
+        slots=[{"bos_token"}, "<|start_header_id|>system<|end_header_id|>\n\n{{content}}<|eot_id|>"]
+    ),
+    format_assistant=StringFormatter(
+        slots=[
+                "<|start_header_id|>assistant<|end_header_id|>\n\n{{content}}<|eot_id|>"
+        ]
+    ),
+    force_system=True,
+    format_tools=ToolFormatter(tool_format="rubra-fc-v1"),
+    format_function=StringFormatter(
+        slots=[
+                "<|start_header_id|>assistant<|end_header_id|>\n\n<<functions>>{{content}}<|eot_id|>"
+        ]
+    ),
+    format_observation=StringFormatter(slots=["<|start_header_id|>tool_call<|end_header_id|>\n\n<<observations>>{{content}}<|eot_id|>"]),
+    default_system="You are a helpful assistant.",
+    stop_words=["<|eot_id|>"],
+    replace_eos=True,
+    generation_prompt="<|start_header_id|>assistant<|end_header_id|>\\n\\n",
+)
+
+
+_register_template(
     name="mistral",
     format_user=StringFormatter(slots=[" [INST] {{content}} [/INST]"]),
     format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
@@ -1097,7 +1127,7 @@ _register_template(
 if __name__ == "__main__":
     from transformers import AutoTokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.2")
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
 
     tool_content = json.dumps(
         [
@@ -1142,12 +1172,12 @@ if __name__ == "__main__":
         {"role": "function_call", "content": '[getCurrentWeather(location="Boston)]'}, 
         {"role": "observation", "content": "72 f."}
     ]
-    res = templates["mistral_rubra"].encode_messages(
+    res = templates["llama3_rubra"].encode_messages(
         messages=messsages, system="you are helpful assistant.", tools=tool_content
     )
     print(f"=======\nEncoded Message:\n=======")
     for msg in res:
         print(msg)
 
-    jinja_template = _get_jinja_template(templates["mistral_rubra"], tokenizer)
+    jinja_template = _get_jinja_template(templates["llama3_rubra"], tokenizer)
     print(f"=======\nJinja Template: \n {jinja_template}\n=======")

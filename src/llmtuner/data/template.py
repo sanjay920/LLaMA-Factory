@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Union
 
 from ..extras.logging import get_logger
-from .formatter import EmptyFormatter, FunctionFormatter, StringFormatter, ToolFormatter
+from .formatter import EmptyFormatter, FunctionFormatter, StringFormatter, ToolFormatter, Formatter
 from .utils import Role, infer_max_len
 
 
@@ -379,6 +379,20 @@ def _get_jinja_template(template: "Template", tokenizer: "PreTrainedTokenizer") 
         template.format_assistant.apply() + template.format_separator.apply(), tokenizer
     )
     jinja_template += "{{ " + assistant_message + " }}"
+    
+    if isinstance(template.format_function, Formatter):
+        jinja_template += "{% elif message['role'] == 'function' %}"
+        function_message = _convert_slots_to_jinja(
+            template.format_function.apply(), tokenizer
+        )
+        jinja_template += "{{ " + function_message + " }}"
+
+    if isinstance(template.format_observation, Formatter):
+        jinja_template += "{% elif message['role'] == 'observation' %}"
+        observation_message = _convert_slots_to_jinja(
+            template.format_observation.apply(), tokenizer
+        )
+        jinja_template += "{{ " + observation_message + " }}"
     jinja_template += "{% endif %}"
     jinja_template += "{% endfor %}"
     return jinja_template
@@ -923,12 +937,13 @@ _register_template(
     format_system=StringFormatter(
         slots=[{"bos_token"}, "<|start_header_id|>system<|end_header_id|>\n\n{{content}}<|eot_id|>"]
     ),
+    format_assistant=StringFormatter(slots=["{{content}}<|eot_id|>"]),
     default_system="You are a helpful assistant.",
     stop_words=["<|eot_id|>"],
     replace_eos=True,
     format_tools=ToolFormatter(tool_format="rubra-fc-v2-llama3"),
     format_function=StringFormatter(slots=["<<functions>>{{content}}<|eot_id|>"]),
-    format_observation=StringFormatter(slots=["<<observations>>{{content}}<|eot_id|>"])
+    format_observation=StringFormatter(slots=["<<observations>>{{content}}<|eot_id|>", "<|start_header_id|>assistant<|end_header_id|>\n\n"])
 )
 
 _register_template(
@@ -1025,12 +1040,12 @@ if __name__ == "__main__":
     # )
     # llama3_rubra
     # llama3
-    res = templates["llama3"].encode_messages(
+    res = templates["llama3_rubra"].encode_messages(
         messages=messages, system="you are helpful assistant.",
     )
     print(f"=======\nEncoded Message:\n=======")
     for msg in res:
         print(msg)
 
-    jinja_template = _get_jinja_template(templates["llama3"], tokenizer)
+    jinja_template = _get_jinja_template(templates["llama3_rubra"], tokenizer)
     print(f"=======\nJinja Template: \n {jinja_template}\n=======")

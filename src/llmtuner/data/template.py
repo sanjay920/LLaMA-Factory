@@ -864,7 +864,7 @@ _register_template(
         ]
     ),
     force_system=True,
-    format_tools=ToolFormatter(tool_format="rubra-fc-v1"),
+    format_tools=ToolFormatter(tool_format="rubra-fc-v2"),
     format_function=StringFormatter(
         slots=[
                 "<|start_header_id|>assistant<|end_header_id|>\n\n<<functions>>{{content}}<|eot_id|>"

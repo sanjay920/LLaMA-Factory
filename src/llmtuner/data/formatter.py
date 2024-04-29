@@ -16,6 +16,7 @@ from typing import (
     Union,
     TypedDict,
 )
+import yaml
 
 
 SLOTS = Sequence[Union[str, Set[str], Dict[str, str]]]
@@ -47,12 +48,154 @@ TOOL_SYSTEM_PROMPT_RUBRA_LLAMA3 = (
     "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
 )
 
+TOOL_SYSTEM_PROMPT_RUBRA_YAML = (
+    "You are a helpful assistant that has access to the following tools/functions:\n{tool_text}\n"
+    "Respond directly to user queries with accurate and relevant information first. If the user's question directly implies the need for a specific tool or additional data that a tool can provide, then consider using the appropriate tool. You can only use the tools detailed above, do NOT make any tools up."
+    "To effectively utilize these tools, follow these YAML formatting guidelines for calling functions:\n"
+    "Single Function Call Example:\n"
+    "- functionCall: <functionName>\n"
+    "  arguments:\n"
+    "    <arg1>: <value1>\n"
+    "    <arg2>: <value2>\n"
+    "    ...\n\n"
+    "Multiple Function Calls in Sequence Example:\n"
+    "- functionCall: <functionName1>\n"
+    "  arguments:\n"
+    "    <arg1>: <value1>\n"
+    "    ...\n"
+    "- functionCall: <functionName2>\n"
+    "  arguments:\n"
+    "    <arg1>: <value1>\n"
+    "    ...\n\n"
+    "Please ensure each function call is correctly formatted in YAML. Always ensure tool use is essential and directly applicable to what the user has asked for. Do not suggest tool use unless it clearly adds value to the response or if the user specifically requests it."
+    "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
+)
+
 
 TOOL_SYSTEM_PROMPT_RUBRA_PYTHON_V1 = (
     "You have access to the following tools, which you can use to perform specific actions:\n{tool_text}"
     "\nTo interact with a tool, format your request as follows:\n[tool_name(arg1=value1, arg2=value2, ...)]"
     "Feel free to respond with either tool calls or chat messages. Make tool calls only once you have all the necessary details. If additional information is needed, ask the user to provide it. Ensure that each tool call accurately reflects the provided function specifications. Do NOT make tool calls to tools that are not defined above. If the user asks to make a tool call to a tool not defined above, you must refuse to and explain why."
 )
+
+def rubra_yaml_tool_formatter(specs: List[Dict[str, Any]]) -> str:
+    function_definitions = []
+    if len(specs) == 1:
+        if isinstance(specs[0], list):
+            specs = specs[0]
+    for spec in specs:
+        try:
+            if isinstance(spec, list):
+                if len(spec) > 1:
+                    print("Got a list instead of a single function spec")
+                else:
+                    spec = spec[0]
+            function_definitions.append(function_json_to_yaml(spec))
+        except Exception as e:
+            print(f"yaml tool Formatter Error {e}")
+            print(json.dumps(spec))
+            print("specs:\n", specs)
+            print("=========================")
+            continue
+
+    if len(function_definitions) == 0:
+        return ""
+    yaml_functions_str = "\n\n".join(function_definitions)
+    res = TOOL_SYSTEM_PROMPT_RUBRA_YAML.format(tool_text=yaml_functions_str)
+    return res
+
+def process_parameter_from_list(param):
+    # Assuming each param in the list is a dictionary representing a parameter
+    return process_parameter(param["name"], param, "required" in param)
+
+def function_json_to_yaml(json_data):
+    formatted_data = {"functionName": json_data.get("name", "")}
+
+    if json_data.get("description", "").strip():
+        formatted_data["description"] = json_data["description"]
+
+    if "parameters" in json_data:
+        parameters = json_data["parameters"]
+        if isinstance(parameters, dict):
+            formatted_data["parameters"] = process_object(parameters)
+        elif isinstance(parameters, list):
+            formatted_data["parameters"] = [process_parameter_from_list(param) for param in parameters]
+        else:
+            print(f"Unexpected type for parameters: {type(parameters)}")
+
+    yaml_str = yaml.safe_dump(
+        formatted_data, sort_keys=False, allow_unicode=True, default_flow_style=False
+    )
+    return yaml_str
+
+def process_object(obj_data):
+    properties = obj_data.get("properties", {})
+    required = obj_data.get("required", [])
+
+    if "required" in properties and not required:
+        required = properties["required"]
+        # delete the required key from properties
+        del properties["required"]
+
+    param_list = []
+    for name, details in properties.items():
+        is_required = name in required  # Check if this property name is in the required list
+        param_info = process_parameter(name, details, is_required)
+        if param_info:
+            param_list.append(param_info)
+
+    additional_properties = obj_data.get("additionalProperties", None)
+    if additional_properties:
+        param_info = {"additionalProperties": additional_properties}
+        param_list.append(param_info)
+
+    return param_list
+
+def process_parameter(name, details, is_required):
+    # Ensure details is a dictionary
+    if not isinstance(details, dict):
+        print(f"Invalid parameter details for '{name}'. Expected a dictionary, got {type(details)}. Details: {details}")
+        return None
+
+    param_info = {
+        "name": name,
+        "type": details.get("type", "")
+    }
+
+    if details.get("description", "").strip():
+        param_info["description"] = details["description"]
+
+    if is_required:
+        param_info["required"] = True  # Explicitly add `required: True` if the parameter is required
+
+    if "enum" in details:
+        param_info["enum"] = details["enum"]
+
+    if "format" in details:
+        param_info["format"] = details.get("format")
+
+    if details.get("type") == "array" and "items" in details:
+        param_info["items"] = process_items(details["items"])
+
+    # Additional keys processing (e.g., validation keywords)
+    for key in ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minLength", "maxLength", "pattern", "default"]:
+        if key in details:
+            param_info[key] = details[key]
+
+    # Combiners and Properties handling
+    if "properties" in details:
+        param_info["properties"] = process_object(details)
+        
+    additional_properties = details.get("additionalProperties")
+    if additional_properties:
+        param_info["additionalProperties"] = additional_properties
+
+    return param_info
+def process_items(items):
+    if "properties" in items:
+        return process_object(items)
+    else:
+        return {"type": items.get("type", "object")}
 
 
 def rubra_python_v1_type_mapping(json_type: str, item_schema=None):
@@ -743,6 +886,60 @@ def rubra_fc_v2_tool_extractor(content: str):
     # Convert result dictionaries to JSON
     return json.dumps(result_dicts, ensure_ascii=False)
 
+def rubra_fc_yaml_tool_extractor(content: str):
+    regex = re.compile(r"<<functions>>(.*)", re.DOTALL)
+    matches = re.findall(regex, content)
+    print("Extracted content-----\n", matches)
+
+    if not matches:
+        print("No matches found")
+        return content
+
+    yaml_content = matches[0].strip()
+    corrected_yaml_content = ""
+    previous_indent = 0
+    indent_stack = [0]  # Manage indentation levels
+
+    for line in yaml_content.splitlines():
+        # Remove incorrect quote and parenthesis handling
+        line = re.sub(r"['\"]?\)$", "", line)  # Remove trailing quotes and parenthesis
+        line = line.replace("'''", "'")        # Fix triple single quotes
+
+        current_indent = len(line) - len(line.lstrip())
+
+        # Adjust indentation based on current structure
+        if current_indent > previous_indent:
+            indent_stack.append(current_indent)
+        elif current_indent < previous_indent and current_indent in indent_stack:
+            indent_stack = indent_stack[:indent_stack.index(current_indent) + 1]
+
+        new_indent = (len(indent_stack) - 1) * 2  # Standard YAML indentation
+        corrected_yaml_content += " " * new_indent + line.strip() + '\n'
+
+        previous_indent = current_indent
+
+    print("Corrected YAML content-----\n", corrected_yaml_content)
+
+    # Attempt to parse the corrected YAML content
+    try:
+        parsed_data = yaml.safe_load(corrected_yaml_content)
+    except yaml.YAMLError as exc:
+        print("Error parsing YAML:", exc)
+        return content
+
+    print("Parsed data-----\n", parsed_data)
+
+    # Ensure parsed_data is a list of dictionaries
+    if not isinstance(parsed_data, list):
+        print("Parsed data is not a list")
+        return json.dumps([])
+
+    # Replace 'functionCall' with 'name' in the list of dictionaries
+    for item in parsed_data:
+        if item and 'functionCall' in item:
+            item['name'] = item.pop('functionCall')
+
+    return json.dumps(parsed_data, ensure_ascii=False)
 
 @dataclass
 class Formatter(ABC):
@@ -868,6 +1065,10 @@ class ToolFormatter(Formatter):
                 tools_formatted = [rubra_fc_v2_tool_formatter(tools)]
                 # print(tools_formatted)
                 return tools_formatted
+            elif self.tool_format == "rubra-fc-yaml":
+                tools_formatted = [rubra_yaml_tool_formatter(tools)]
+                # print(tools_formatted)
+                return tools_formatted
             elif self.tool_format == "rubra-fc-v2-llama3":
                 tools_formatted = [rubra_fc_v2_tool_formatter_llama3(tools)]
                 # print(tools_formatted)
@@ -893,6 +1094,8 @@ class ToolFormatter(Formatter):
             return rubra_fc_v2_tool_extractor(content)
         elif self.tool_format == "rubra-fc-v2-llama3":
             return rubra_fc_v2_tool_extractor(content)
+        elif self.tool_format == "rubra-fc-yaml":
+            return rubra_fc_yaml_tool_extractor(content)
         elif self.tool_format == "rubra_python_v1_tool_formatter":
             return rubra_fc_v2_tool_extractor(content)
         else:

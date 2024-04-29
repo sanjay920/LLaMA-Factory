@@ -1,4 +1,77 @@
 {
+  "yaml-simple": {
+    "hf_hub_url": "sanjay920/functions-simple-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-multiple": {
+    "hf_hub_url": "sanjay920/functions-multiple-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-parallel": {
+    "hf_hub_url": "sanjay920/functions-parallel-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-parallel_multiple": {
+    "hf_hub_url": "sanjay920/functions-parallel_multiple-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-relevance": {
+    "hf_hub_url": "sanjay920/functions-relevance-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-sql": {
+    "hf_hub_url": "sanjay920/functions-sql-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-rest": {
+    "hf_hub_url": "sanjay920/functions-rest-yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "yaml-gptscript-x8": {
+    "hf_hub_url": "sanjay920/gptscript-data-yaml_x8",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "yaml-chain_of_function": {
+    "hf_hub_url": "sanjay920/chain_of_function_v2_yaml",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
   "rubra-functions-test-simple": {
     "hf_hub_url": "sanjay920/functions-test-simple",
     "formatting": "sharegpt",
@@ -698,7 +771,7 @@
       "history": "history"
     }
   },
-  "orca_dpo_de" : {
+  "orca_dpo_de": {
     "hf_hub_url": "mayflowergmbh/intel_orca_dpo_pairs_de",
     "ranking": true
   },

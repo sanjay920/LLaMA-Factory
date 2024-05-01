@@ -131,8 +131,18 @@ class WebChatModel(ChatModel):
                 output_messages = messages + [{"role": Role.FUNCTION.value, "content": tool_call}]
                 bot_text = "```json\n" + tool_call + "\n```"
             else:
-                output_messages = messages + [{"role": Role.ASSISTANT.value, "content": result}]
-                bot_text = result
+                try:
+                    # check if it's a rubra function call
+                    result = json.loads(result)
+                    print("Identified rubra function call")
+                    output_messages = messages + [{"role": Role.FUNCTION.value, "content": response}]
+                    bot_text = "```json\n" + json.dumps(result) + "\n```"
+                    print("bot_text:", str(bot_text))
+                    print("output_messages:", str(output_messages))
+                except Exception as e:
+                    print("error", e)
+                    output_messages = messages + [{"role": Role.ASSISTANT.value, "content": result}]
+                    bot_text = result
 
             chatbot[-1][1] = bot_text
             yield chatbot, output_messages

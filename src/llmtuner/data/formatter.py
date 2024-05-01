@@ -766,27 +766,6 @@ def parse_function_call(call):
     return {"name": func_name.strip(), "arguments": args_dict}
 
 
-def parse_function_call(call):
-    func_name, args_str = call.split("(", 1)
-    args_str = args_str.rstrip(")")
-    args_list = args_str.split(",")
-    args_dict = {}
-    for arg in args_list:
-        key, value = arg.split("=")
-        key = key.strip()
-        value = value.strip()
-        try:
-            # Use ast.literal_eval to safely parse the string to its Python type
-            parsed_value = ast.literal_eval(value)
-        except ValueError as e:
-            # If parsing fails, keep the original string.
-            # This might happen if the value is a string that's not quoted as a Python literal.
-            print(f"Error parsing value {value}: {e}")
-            parsed_value = value
-        args_dict[key] = parsed_value
-    return {"name": func_name.strip(), "arguments": args_dict}
-
-
 def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
     regex = re.compile(r"<<functions>>\[(.*?)\]", re.DOTALL)
     matches = re.findall(regex, content)
@@ -887,6 +866,7 @@ def rubra_fc_v2_tool_extractor(content: str):
     return json.dumps(result_dicts, ensure_ascii=False)
 
 def rubra_fc_yaml_tool_extractor(content: str):
+    print("Original content to rubra_fc_yaml_tool_extractor content-----\n", content)
     regex = re.compile(r"<<functions>>(.*)", re.DOTALL)
     matches = re.findall(regex, content)
     print("Extracted content-----\n", matches)
@@ -896,6 +876,7 @@ def rubra_fc_yaml_tool_extractor(content: str):
         return content
 
     yaml_content = matches[0].strip()
+    yaml_content = re.sub(r"(<<functions>>)*", "", yaml_content)
     corrected_yaml_content = ""
     previous_indent = 0
     indent_stack = [0]  # Manage indentation levels

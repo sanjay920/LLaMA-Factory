@@ -1,6 +1,30 @@
 {
+  "01_basic_yaml": {
+    "hf_hub_url": "sanjay920/01_basic_yaml_v2",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "02_basic_negative_yaml": {
+    "hf_hub_url": "sanjay920/02_basic_negative_yaml_v2",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "03_sequenced_yaml": {
+    "hf_hub_url": "sanjay920/03_sequenced_yaml_v2",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
   "yaml-simple": {
-    "hf_hub_url": "sanjay920/functions-simple-yaml",
+    "hf_hub_url": "sanjay920/functions-simple-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -8,7 +32,7 @@
     }
   },
   "yaml-multiple": {
-    "hf_hub_url": "sanjay920/functions-multiple-yaml",
+    "hf_hub_url": "sanjay920/functions-multiple-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -16,7 +40,7 @@
     }
   },
   "yaml-parallel": {
-    "hf_hub_url": "sanjay920/functions-parallel-yaml",
+    "hf_hub_url": "sanjay920/functions-parallel-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -24,7 +48,7 @@
     }
   },
   "yaml-parallel_multiple": {
-    "hf_hub_url": "sanjay920/functions-parallel_multiple-yaml",
+    "hf_hub_url": "sanjay920/functions-parallel_multiple-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -32,7 +56,7 @@
     }
   },
   "yaml-relevance": {
-    "hf_hub_url": "sanjay920/functions-relevance-yaml",
+    "hf_hub_url": "sanjay920/functions-relevance-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -40,7 +64,7 @@
     }
   },
   "yaml-sql": {
-    "hf_hub_url": "sanjay920/functions-sql-yaml",
+    "hf_hub_url": "sanjay920/functions-sql-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -48,15 +72,24 @@
     }
   },
   "yaml-rest": {
-    "hf_hub_url": "sanjay920/functions-rest-yaml",
+    "hf_hub_url": "sanjay920/functions-rest-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
       "tools": "functions"
     }
   },
-  "yaml-gptscript-x8": {
-    "hf_hub_url": "sanjay920/gptscript-data-yaml_x8",
+  "yaml-gptscript-x5": {
+    "hf_hub_url": "sanjay920/gptscript-data-yaml_v2_x5",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
+  "yaml-gptscript": {
+    "hf_hub_url": "sanjay920/gptscript-data-yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",
@@ -65,7 +98,7 @@
     }
   },
   "yaml-chain_of_function": {
-    "hf_hub_url": "sanjay920/chain_of_function_v2_yaml",
+    "hf_hub_url": "sanjay920/chain_of_function_v2_yaml_v2",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",

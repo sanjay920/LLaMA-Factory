@@ -48,28 +48,69 @@ TOOL_SYSTEM_PROMPT_RUBRA_LLAMA3 = (
     "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
 )
 
+# TOOL_SYSTEM_PROMPT_RUBRA_YAML = (
+#     "You are a helpful assistant that has access to the following tools/functions:\n{tool_text}\n"
+#     "Respond directly to user queries with accurate and relevant information first. If the user's question directly implies the need for a specific tool or additional data that a tool can provide, then consider using the appropriate tool. You can only use the tools detailed above, do NOT make any tools up."
+#     "To effectively utilize these tools, follow these YAML formatting guidelines for calling functions:\n"
+#     "Single Function Call Example:\n"
+#     "- functionCall: <functionName>\n"
+#     "  arguments:\n"
+#     "    <arg1>: <value1>\n"
+#     "    <arg2>: <value2>\n"
+#     "    ...\n\n"
+#     "Multiple Function Calls in Sequence Example:\n"
+#     "- functionCall: <functionName1>\n"
+#     "  arguments:\n"
+#     "    <arg1>: <value1>\n"
+#     "    ...\n"
+#     "- functionCall: <functionName2>\n"
+#     "  arguments:\n"
+#     "    <arg1>: <value1>\n"
+#     "    ...\n\n"
+#     "Please ensure each function call is correctly formatted in YAML. Always ensure tool use is essential and directly applicable to what the user has asked for. Do not suggest tool use unless it clearly adds value to the response or if the user specifically requests it."
+#     "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
+# )
+
 TOOL_SYSTEM_PROMPT_RUBRA_YAML = (
-    "You are a helpful assistant that has access to the following tools/functions:\n{tool_text}\n"
-    "Respond directly to user queries with accurate and relevant information first. If the user's question directly implies the need for a specific tool or additional data that a tool can provide, then consider using the appropriate tool. You can only use the tools detailed above, do NOT make any tools up."
-    "To effectively utilize these tools, follow these YAML formatting guidelines for calling functions:\n"
-    "Single Function Call Example:\n"
-    "- functionCall: <functionName>\n"
+    "You are a helpful assistant equipped with access to various tools. Utilize these tools as needed to enhance your responses or provide specific functionalities, ensuring that all tool uses are justified based on user queries. Do not fabricate tools beyond those specified."
+    "YAML formatting guidelines for calling functions are as follows:\n"
+    "Example of a Single Function Call:\n"
+    "functionCalls:\n"
+    "- name: ExampleFunction\n"
     "  arguments:\n"
-    "    <arg1>: <value1>\n"
-    "    <arg2>: <value2>\n"
-    "    ...\n\n"
-    "Multiple Function Calls in Sequence Example:\n"
-    "- functionCall: <functionName1>\n"
+    "    arg1: value1\n"
+    "    arg2: value2\n\n"
+    "Example of Multiple Function Calls in Sequence:\n"
+    "functionCalls:\n"
+    "- name: FirstFunction\n"
     "  arguments:\n"
-    "    <arg1>: <value1>\n"
+    "    arg1: value1\n"
     "    ...\n"
-    "- functionCall: <functionName2>\n"
+    "- name: SecondFunction\n"
     "  arguments:\n"
-    "    <arg1>: <value1>\n"
+    "    arg1: value1\n"
     "    ...\n\n"
-    "Please ensure each function call is correctly formatted in YAML. Always ensure tool use is essential and directly applicable to what the user has asked for. Do not suggest tool use unless it clearly adds value to the response or if the user specifically requests it."
-    "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
+    "Here's a practical example of function calls in sequence:\n"
+    "functionCalls:\n"
+    "- name: Midpoint.calculate\n"
+    "  arguments:\n"
+    "    pointC:\n"
+    "    - 5\n"
+    "    - 12\n"
+    "    pointD:\n"
+    "    - 7\n"
+    "    - 4\n"
+    "- name: register_startup\n"
+    "  arguments:\n"
+    "    name: SkyHigh\n"
+    "    founders:\n"
+    "    - Alice\n"
+    "    - Bob\n"
+    "    funding_amount: 500000\n\n"
+    "Always ensure that function calls are correctly formatted in YAML and that their use is directly applicable to the user's request. If the user's intent is unclear, or if a query could be interpreted in multiple ways, clarify the user's needs before responding or using tools. Focus on engaging meaningfully and precisely with user requests."
+    "Here are the tools/functions you have access to:\n{tool_text}\n"
 )
+
 
 
 TOOL_SYSTEM_PROMPT_RUBRA_PYTHON_V1 = (
@@ -109,22 +150,31 @@ def process_parameter_from_list(param):
     return process_parameter(param["name"], param, "required" in param)
 
 def function_json_to_yaml(json_data):
-    formatted_data = {"functionName": json_data.get("name", "")}
+    # Change the function to handle a list of functions rather than a single function
+    functions_list = [json_data]  # This would be replaced with a list of functions if processing multiple
 
-    if json_data.get("description", "").strip():
-        formatted_data["description"] = json_data["description"]
+    formatted_functions = []
+    for function in functions_list:
+        formatted_data = {
+            "functionName": function.get("name", "")
+        }
 
-    if "parameters" in json_data:
-        parameters = json_data["parameters"]
-        if isinstance(parameters, dict):
-            formatted_data["parameters"] = process_object(parameters)
-        elif isinstance(parameters, list):
-            formatted_data["parameters"] = [process_parameter_from_list(param) for param in parameters]
-        else:
-            print(f"Unexpected type for parameters: {type(parameters)}")
+        if function.get("description", "").strip():
+            formatted_data["description"] = function["description"]
+
+        if "parameters" in function:
+            parameters = function["parameters"]
+            if isinstance(parameters, dict):
+                formatted_data["parameters"] = process_object(parameters)
+            elif isinstance(parameters, list):
+                formatted_data["parameters"] = [process_parameter_from_list(param) for param in parameters]
+            else:
+                print(f"Unexpected type for parameters: {type(parameters)}")
+
+        formatted_functions.append(formatted_data)
 
     yaml_str = yaml.safe_dump(
-        formatted_data, sort_keys=False, allow_unicode=True, default_flow_style=False
+        formatted_functions, sort_keys=False, allow_unicode=True, default_flow_style=False
     )
     return yaml_str
 
@@ -134,12 +184,11 @@ def process_object(obj_data):
 
     if "required" in properties and not required:
         required = properties["required"]
-        # delete the required key from properties
         del properties["required"]
 
     param_list = []
     for name, details in properties.items():
-        is_required = name in required  # Check if this property name is in the required list
+        is_required = name in required
         param_info = process_parameter(name, details, is_required)
         if param_info:
             param_list.append(param_info)
@@ -152,7 +201,6 @@ def process_object(obj_data):
     return param_list
 
 def process_parameter(name, details, is_required):
-    # Ensure details is a dictionary
     if not isinstance(details, dict):
         print(f"Invalid parameter details for '{name}'. Expected a dictionary, got {type(details)}. Details: {details}")
         return None
@@ -166,7 +214,7 @@ def process_parameter(name, details, is_required):
         param_info["description"] = details["description"]
 
     if is_required:
-        param_info["required"] = True  # Explicitly add `required: True` if the parameter is required
+        param_info["required"] = True
 
     if "enum" in details:
         param_info["enum"] = details["enum"]
@@ -177,26 +225,24 @@ def process_parameter(name, details, is_required):
     if details.get("type") == "array" and "items" in details:
         param_info["items"] = process_items(details["items"])
 
-    # Additional keys processing (e.g., validation keywords)
     for key in ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minLength", "maxLength", "pattern", "default"]:
         if key in details:
             param_info[key] = details[key]
 
-    # Combiners and Properties handling
     if "properties" in details:
         param_info["properties"] = process_object(details)
-        
+
     additional_properties = details.get("additionalProperties")
     if additional_properties:
         param_info["additionalProperties"] = additional_properties
 
     return param_info
+
 def process_items(items):
     if "properties" in items:
         return process_object(items)
     else:
-        return {"type": items.get("type", "object")}
-
+        return [{"type": items.get("type", "object")}]
 
 def rubra_python_v1_type_mapping(json_type: str, item_schema=None):
     base_types = {

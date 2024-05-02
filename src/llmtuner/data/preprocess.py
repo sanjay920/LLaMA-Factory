@@ -241,14 +241,14 @@ def print_supervised_dataset_example(
     )
     # print("label_ids:\n{}".format(example["labels"]))
 
-    print(
-        "labels:\n{}".format(
-            tokenizer.decode(
-                list(filter(lambda x: x != IGNORE_INDEX, example["labels"])),
-                skip_special_tokens=False,
-            )
-        )
-    )
+    # print(
+    #     "labels:\n{}".format(
+    #         tokenizer.decode(
+    #             list(filter(lambda x: x != IGNORE_INDEX, example["labels"])),
+    #             skip_special_tokens=False,
+    #         )
+    #     )
+    # )
     print("=========================================")
 
 

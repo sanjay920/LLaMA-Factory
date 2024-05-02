@@ -986,7 +986,7 @@ _register_template(
     format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     force_system=True,
     format_tools=ToolFormatter(tool_format="rubra-fc-yaml"),
-    format_function=StringFormatter(slots=["<<functions>>{{content}}", {"eos_token"}]),
+    format_function=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     format_observation=StringFormatter(slots=["[INST] <<observation>>{{content}} [/INST]"]),
 )
 

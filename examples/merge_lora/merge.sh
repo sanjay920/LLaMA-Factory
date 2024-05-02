@@ -8,4 +8,5 @@ CUDA_VISIBLE_DEVICES= python ../../src/export_model.py \
     --finetuning_type lora \
     --export_dir ../../models/llama2-7b-sft \
     --export_size 2 \
+    --export_device cpu \
     --export_legacy_format False

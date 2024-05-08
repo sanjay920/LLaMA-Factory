@@ -360,10 +360,10 @@ def _get_jinja_template(template: "Template", tokenizer: "PreTrainedTokenizer") 
     system_message = _convert_slots_to_jinja(template.format_system.apply(), tokenizer, placeholder="system_message")
     if isinstance(template, Llama2Template):
         pass
-    elif template.force_system:
-        jinja_template += "{{ " + system_message + " }}"
+    # elif template.force_system:
+    #     jinja_template += "{{ " + system_message + " }}"
     else:
-        jinja_template += "{% if system_message is defined %}{{ " + system_message + " }}{% endif %}"
+        jinja_template += "{% if system_message is defined %}{{ " + system_message + " }}{% else %}{{ bos_token }}{% endif %}"
 
     jinja_template += "{% for message in messages %}"
     jinja_template += "{% set content = message['content'] %}"
@@ -1012,7 +1012,8 @@ if __name__ == "__main__":
     from transformers import AutoTokenizer
     import json
 
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+    # tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
+    tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.2")
 
     tool_content = json.dumps(
         [
@@ -1067,12 +1068,16 @@ if __name__ == "__main__":
     # )
     # llama3_rubra
     # llama3
-    res = templates["llama3_rubra"].encode_messages(
+    res = templates["mistral_rubra"].encode_messages(
         messages=messages, system="you are helpful assistant.",
     )
     print(f"=======\nEncoded Message:\n=======")
     for msg in res:
         print(msg)
 
-    jinja_template = _get_jinja_template(templates["llama3_rubra"], tokenizer)
+    jinja_template = _get_jinja_template(templates["mistral_rubra"], tokenizer)
     print(f"=======\nJinja Template: \n {jinja_template}\n=======")
+    tokenizer.chat_template = jinja_template
+    prompt = tokenizer.apply_chat_template(messages, tokenize=False)
+    print(prompt)
+    

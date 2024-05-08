@@ -34,11 +34,22 @@ TOOL_SYSTEM_PROMPT = (
     "```\n"
 )
 
+# TOOL_SYSTEM_PROMPT_RUBRA = (
+#     "You have access to the following tools:\n{tool_text}"
+#     "Use the following format if using a tool:\n<<functions>>[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
+#     "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate. Any tool call you make must match the name of a function(s) provided above."
+# )
+
 TOOL_SYSTEM_PROMPT_RUBRA = (
-    "You have access to the following tools:\n{tool_text}"
-    "Use the following format if using a tool:\n<<functions>>[toolname1(arg1=value1, arg2=value2, ...), toolname2(arg1=value1, arg2=value2, ...)]"
-    "You can choose to respond with 1 or more tool calls at once, or with a chat message back to the user. Only make tool calls once you have all the details to fill in the required params. Feel free to ask the user for more info when appropriate. Any tool call you make must match the name of a function(s) provided above."
+    "You have access to the following tools: {tool_text}\n"
+    "You can choose to respond with one or more tool calls at once, or with a chat message back to the user. "
+    "Ensure you have all necessary details before making tool calls. If additional information is needed, "
+    "ask the user appropriately. Any tool call you make must correspond to the functions listed above.\n"
+    "If you decide to call tools, format your response in JSONL. Start with the keyword `<functions>` followed by the JSON object:\n"
+    '`<functions>{{"name": "<function_name>", "arguments": {{"<arg1_name>": "<arg1_value>", "<arg2_name>": "<arg2_value>", ...}}}}`'
 )
+
+
 
 TOOL_SYSTEM_PROMPT_RUBRA_LLAMA3 = (
     "You have access to the following tools:\n{tool_text}"
@@ -48,28 +59,6 @@ TOOL_SYSTEM_PROMPT_RUBRA_LLAMA3 = (
     "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
 )
 
-# TOOL_SYSTEM_PROMPT_RUBRA_YAML = (
-#     "You are a helpful assistant that has access to the following tools/functions:\n{tool_text}\n"
-#     "Respond directly to user queries with accurate and relevant information first. If the user's question directly implies the need for a specific tool or additional data that a tool can provide, then consider using the appropriate tool. You can only use the tools detailed above, do NOT make any tools up."
-#     "To effectively utilize these tools, follow these YAML formatting guidelines for calling functions:\n"
-#     "Single Function Call Example:\n"
-#     "- functionCall: <functionName>\n"
-#     "  arguments:\n"
-#     "    <arg1>: <value1>\n"
-#     "    <arg2>: <value2>\n"
-#     "    ...\n\n"
-#     "Multiple Function Calls in Sequence Example:\n"
-#     "- functionCall: <functionName1>\n"
-#     "  arguments:\n"
-#     "    <arg1>: <value1>\n"
-#     "    ...\n"
-#     "- functionCall: <functionName2>\n"
-#     "  arguments:\n"
-#     "    <arg1>: <value1>\n"
-#     "    ...\n\n"
-#     "Please ensure each function call is correctly formatted in YAML. Always ensure tool use is essential and directly applicable to what the user has asked for. Do not suggest tool use unless it clearly adds value to the response or if the user specifically requests it."
-#     "If the user's intent is unclear or if the question could have multiple interpretations, clarify the user's needs before providing a response or using any tools. Focus on engaging meaningfully and precisely with the user’s requests."
-# )
 
 TOOL_SYSTEM_PROMPT_RUBRA_YAML = (
     "You are a helpful assistant equipped with access to various tools. Utilize these tools as needed to enhance your responses or provide specific functionalities, ensuring that all tool uses are justified based on user queries. Do not fabricate tools beyond those specified."
@@ -872,44 +861,73 @@ def rubra_fc_v1_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
         return content
 
 
-def rubra_fc_v2_tool_extractor(content: str):
-    # Regex to extract content within <<functions>>[...]
-    regex = re.compile(r"<<functions>>\[(.*?)\]", re.DOTALL)
-    matches = re.findall(regex, content)
+# def rubra_fc_v2_tool_extractor(content: str):
+#     # Regex to extract content within <<functions>>[...]
+#     regex = re.compile(r"<<functions>>\[(.*?)\]", re.DOTALL)
+#     matches = re.findall(regex, content)
 
-    if not matches:
+#     if not matches:
+#         return content
+
+#     # Process each match
+#     result_dicts = []
+#     for match in matches:
+#         # Wrap the extracted string in brackets if it's not a list format expected by ast.parse
+#         if not match.strip().startswith("["):
+#             match = f"[{match}]"
+#         try:
+#             parsed = ast.parse(match, mode="eval")
+#         except SyntaxError as e:
+#             print(f"Syntax error while parsing functions: {e}\n", content)
+#             continue
+
+#         # Assuming the outer structure is a list
+#         if isinstance(parsed.body, ast.List):
+#             for func in parsed.body.elts:
+#                 if isinstance(func, ast.Call):
+#                     func_name = func.func.id
+#                     args_dict = {}
+#                     for keyword in func.keywords:
+#                         arg_name = keyword.arg
+#                         # We use ast.literal_eval to safely evaluate the value
+#                         if isinstance(keyword.value, ast.Constant):
+#                             arg_value = keyword.value.value
+#                         else:
+#                             arg_value = ast.dump(keyword.value)
+#                         args_dict[arg_name] = arg_value
+#                     result_dicts.append({"name": func_name, "arguments": args_dict})
+
+#     # Convert result dictionaries to JSON
+#     return json.dumps(result_dicts, ensure_ascii=False)
+
+def rubra_fc_v2_tool_extractor(content: str) -> str:
+    # Check if the content starts with <functions>
+    if content.startswith('<functions>'):
+        # Remove the <functions> tag
+        content = content[len('<functions>'):].strip()
+        # Initialize list to hold the resulting dictionaries and raw JSON strings
+        result_dicts = []
+        # Split the content into individual JSON strings (assuming each JSON is separated by a new line)
+        json_strings = content.split('\n')
+        # Process each JSON string
+        for json_string in json_strings:
+            json_string = json_string.strip()  # Remove any leading/trailing whitespace
+            if not json_string:
+                continue  # Skip empty lines
+            try:
+                # Try to parse the JSON string into a dictionary
+                json_dict = json.loads(json_string)
+                # Add the dictionary to the list
+                result_dicts.append(json_dict)
+            except json.JSONDecodeError:
+                # Add the raw JSON string to the list if it cannot be decoded
+                result_dicts.append(json_string)
+        # Convert the list of dictionaries and strings to a JSON string and return
+        return json.dumps(result_dicts, ensure_ascii=False)
+    else:
+        # Return the content as is if it doesn't start with <functions>
         return content
 
-    # Process each match
-    result_dicts = []
-    for match in matches:
-        # Wrap the extracted string in brackets if it's not a list format expected by ast.parse
-        if not match.strip().startswith("["):
-            match = f"[{match}]"
-        try:
-            parsed = ast.parse(match, mode="eval")
-        except SyntaxError as e:
-            print(f"Syntax error while parsing functions: {e}\n", content)
-            continue
-
-        # Assuming the outer structure is a list
-        if isinstance(parsed.body, ast.List):
-            for func in parsed.body.elts:
-                if isinstance(func, ast.Call):
-                    func_name = func.func.id
-                    args_dict = {}
-                    for keyword in func.keywords:
-                        arg_name = keyword.arg
-                        # We use ast.literal_eval to safely evaluate the value
-                        if isinstance(keyword.value, ast.Constant):
-                            arg_value = keyword.value.value
-                        else:
-                            arg_value = ast.dump(keyword.value)
-                        args_dict[arg_name] = arg_value
-                    result_dicts.append({"name": func_name, "arguments": args_dict})
-
-    # Convert result dictionaries to JSON
-    return json.dumps(result_dicts, ensure_ascii=False)
 
 def rubra_fc_yaml_tool_extractor(content: str):
     print("Original content to rubra_fc_yaml_tool_extractor content-----\n", content)
@@ -968,6 +986,67 @@ def rubra_fc_yaml_tool_extractor(content: str):
 
     return json.dumps(parsed_data, ensure_ascii=False)
 
+def auto_correct_indentation(content: str):
+    """
+    Automatically corrects YAML indentation by ensuring each list item or key-value pair
+    is properly indented relative to its parent structure.
+    """
+    lines = content.splitlines()
+    corrected_lines = []
+    stack = []  # Stack to track the indentation levels of list items
+
+    for line in lines:
+        if line.strip() == "":
+            corrected_lines.append("")
+            continue
+
+        current_indent = len(line) - len(line.lstrip())
+        stripped_line = line.lstrip()
+
+        if stripped_line.startswith('-'):
+            # It's a list item
+            if not stack or current_indent > stack[-1]:
+                # New block or sub-item more indented than the last
+                if stack:
+                    if current_indent <= stack[-1] + 1:
+                        current_indent = stack[-1] + 2
+                stack.append(current_indent)
+            else:
+                # Possibly same level or backtracking
+                while stack and current_indent <= stack[-1]:
+                    stack.pop()
+                stack.append(current_indent)
+        else:
+            # It's a key-value mapping under a list
+            if stack:
+                expected_indent = stack[-1] + 2
+                if current_indent != expected_indent:
+                    current_indent = expected_indent
+
+        corrected_lines.append(' ' * current_indent + stripped_line)
+
+    return '\n'.join(corrected_lines)
+
+def rubra_fc_yaml_tool_extractor_v2(content: str):
+    """
+    Extracts and processes YAML content describing function calls,
+    converting them from YAML to a JSON format directly with indentation correction.
+    """
+    corrected_content = auto_correct_indentation(content)
+    try:
+        data = yaml.safe_load(corrected_content)
+        if not data or 'functionCalls' not in data:
+            print("No valid data extracted.")
+            return content
+        print("Corrected YAML content:::\n", corrected_content)
+        print("Extracted data:::\n", data)
+        return json.dumps(data['functionCalls'], ensure_ascii=False)
+    except yaml.YAMLError as exc:
+        print("Error parsing YAML:", exc)
+        print("Corrected content:\n-----")
+        print(corrected_content)
+        return content
+    
 @dataclass
 class Formatter(ABC):
     slots: SLOTS = field(default_factory=list)
@@ -1122,7 +1201,7 @@ class ToolFormatter(Formatter):
         elif self.tool_format == "rubra-fc-v2-llama3":
             return rubra_fc_v2_tool_extractor(content)
         elif self.tool_format == "rubra-fc-yaml":
-            return rubra_fc_yaml_tool_extractor(content)
+            return rubra_fc_yaml_tool_extractor_v2(content)
         elif self.tool_format == "rubra_python_v1_tool_formatter":
             return rubra_fc_v2_tool_extractor(content)
         else:

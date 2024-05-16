@@ -1106,7 +1106,56 @@ class StringFormatter(Formatter):
 
         return elements
 
+@dataclass
+class RubraFunctionCallFormatter(Formatter):
+    slots: list
 
+    def __post_init__(self):
+        has_placeholder = False
+        for slot in filter(lambda s: isinstance(s, str), self.slots):
+            if re.search(r"\{\{[a-zA-Z_][a-zA-Z0-9_]*\}\}", slot):
+                has_placeholder = True
+
+        if not has_placeholder:
+            raise ValueError("A placeholder is required in the string formatter.")
+
+    def apply(self, **kwargs) -> SLOTS:
+        """
+        Processes the slots by attempting to load JSON strings correctly.
+        Returns a list with the parsed JSON object from the first slot and any other slots unchanged.
+        """
+        elements = []
+
+        for slot in self.slots:
+            if isinstance(slot, str):
+                try:
+                    for name, value in kwargs.items():
+                        if not isinstance(value, str):
+                            raise RuntimeError("Expected a string, got {}".format(value))
+                        slot = slot.replace("{{" + name + "}}", str(process_msg_value(value)), 1)
+                except json.JSONDecodeError:
+                    # If there is a decoding error, the string might not be properly escaped
+                     raise ValueError(f"Failed to parse JSON from the value: {value}")
+                elements.append(slot)
+            elif isinstance(slot, (dict, set)):
+                elements.append(slot)
+            else:
+                raise RuntimeError(
+                    "Input must be string, set[str] or dict[str, str], got {}".format(
+                        type(slot)
+                    )
+                )
+
+        return elements
+
+def process_msg_value(value):
+    try:
+        # Try to parse the entire string as a single JSON object
+        return json.loads(value)
+    except json.JSONDecodeError:
+        # If that fails, assume it's in jsonl format and parse each line individually
+        return [json.loads(line) for line in value.split('\n') if line]
+    
 @dataclass
 class FunctionFormatter(Formatter):
     def __post_init__(self):

@@ -6,6 +6,14 @@
       "messages": "conversations"
     }
   },
+  "WildChat_116k_functions": {
+    "hf_hub_url": "sanjay920/WildChat_116k_functions",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
   "Mistral-7B-Instruct-v0.2-fc-json_v1-v2": {
     "hf_hub_url": "sanjay920/Mistral-7B-Instruct-v0.2-fc-json_v1-v2",
     "formatting": "sharegpt",
@@ -26,6 +34,24 @@
   },
   "Mistral-7B-Instruct-v0.2-fc-json_v1-v4": {
     "hf_hub_url": "sanjay920/Mistral-7B-Instruct-v0.2-fc-json_v1-v4",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions",
+      "system": "system"
+    }
+  },
+  "Mistral-7B-Instruct-v0.2-fc-json_v1-v5": {
+    "hf_hub_url": "sanjay920/Mistral-7B-Instruct-v0.2-fc-json_v1-v5",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions",
+      "system": "system"
+    }
+  },
+  "Mistral-7B-Instruct-v0.2-fc-json_v1-v6": {
+    "hf_hub_url": "sanjay920/Mistral-7B-Instruct-v0.2-fc-json_v1-v6",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",

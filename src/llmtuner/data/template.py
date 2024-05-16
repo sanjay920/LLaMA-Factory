@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple, Union
 
 from ..extras.logging import get_logger
-from .formatter import EmptyFormatter, FunctionFormatter, StringFormatter, ToolFormatter, Formatter
+from .formatter import EmptyFormatter, FunctionFormatter, StringFormatter, RubraFunctionCallFormatter, ToolFormatter, Formatter
 from .utils import Role, infer_max_len
 
 
@@ -991,6 +991,7 @@ _register_template(
     format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     force_system=True,
     format_tools=ToolFormatter(tool_format="rubra-fc-v2"),
+    # format_function=RubraFunctionCallFormatter(slots=["<functions>{{content}}", {"eos_token"}]),
     format_function=StringFormatter(slots=["<functions>{{content}}", {"eos_token"}]),
     format_observation=StringFormatter(slots=["[INST] <<observation>>{{content}} [/INST]"]),
 )

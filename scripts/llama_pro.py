@@ -40,12 +40,18 @@ def block_expansion(
     config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path)
     num_layers = getattr(config, "num_hidden_layers")
     setattr(config, "num_hidden_layers", num_layers + num_expand)
+    
+    del config.__dict__["auto_map"]
+    del config.__dict__["_name_or_path"]
+
     config.save_pretrained(output_dir)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     tokenizer.save_pretrained(output_dir)
 
     config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path)  # load the original one
+    del config.__dict__["auto_map"]
+    del config.__dict__["_name_or_path"]
     if save_safetensors:
         setattr(config, "tie_word_embeddings", False)  # safetensors does not allow shared weights
 

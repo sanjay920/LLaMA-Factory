@@ -1,7 +1,7 @@
 import os
 from functools import partial
 from typing import TYPE_CHECKING, Any, Dict, List, Union
-
+import json
 from datasets import Features
 
 from ..extras.logging import get_logger
@@ -104,6 +104,8 @@ def convert_sharegpt(
     odd_tags = (dataset_attr.user_tag, dataset_attr.observation_tag)
     even_tags = (dataset_attr.assistant_tag, dataset_attr.function_tag)
     accept_tags = (odd_tags, even_tags)
+    loaded_jsons = [json.loads(row) for row in examples[dataset_attr.messages]]
+    examples[dataset_attr.messages] = loaded_jsons
     for i, messages in enumerate(examples[dataset_attr.messages]):
         if dataset_attr.system_tag and messages[0][dataset_attr.role_tag] == dataset_attr.system_tag:
             system = messages[0][dataset_attr.content_tag]

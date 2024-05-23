@@ -773,6 +773,18 @@ _register_template(
     replace_eos=True,
 )
 
+_register_template(
+    name="phi-rubra",
+    format_user=StringFormatter(slots=["<|user|>\n{{content}}<|end|>\n<|assistant|>\n"]),
+    format_system=StringFormatter(slots=[{"bos_token"}, "<|system|>\n{{content}}<|end|>\n"]),
+    format_observation=StringFormatter(slots=["<|function_output|>\n{{content}}<|end|>\n<|assistant|>\n"]),
+    format_separator=EmptyFormatter(slots=["\n"]),
+    format_tools=ToolFormatter(tool_format="rubra-fc-v3"),
+    default_system="You are a helpful AI assistant.",
+    stop_words=["<|end|>"],
+    replace_eos=True,
+)
+
 
 _register_template(
     name="qwen",

@@ -2,6 +2,19 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 from typing import Dict, Optional
 
+from peft.utils import SAFETENSORS_WEIGHTS_NAME as SAFE_ADAPTER_WEIGHTS_NAME
+from peft.utils import WEIGHTS_NAME as ADAPTER_WEIGHTS_NAME
+from transformers.utils import SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME, WEIGHTS_INDEX_NAME, WEIGHTS_NAME
+
+
+CHECKPOINT_NAMES = {
+    SAFE_ADAPTER_WEIGHTS_NAME,
+    ADAPTER_WEIGHTS_NAME,
+    SAFE_WEIGHTS_INDEX_NAME,
+    SAFE_WEIGHTS_NAME,
+    WEIGHTS_INDEX_NAME,
+    WEIGHTS_NAME,
+}
 
 CHOICES = ["A", "B", "C", "D"]
 
@@ -22,15 +35,13 @@ FILEEXT2TYPE = {
 
 IGNORE_INDEX = -100
 
-IMAGE_TOKEN = "<image>"
-
 LAYERNORM_NAMES = {"norm", "ln"}
 
 METHODS = ["full", "freeze", "lora"]
 
-MOD_SUPPORTED_MODELS = ["bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"]
+MOD_SUPPORTED_MODELS = {"bloom", "falcon", "gemma", "llama", "mistral", "mixtral", "phi", "starcoder2"}
 
-PEFT_METHODS = ["lora"]
+PEFT_METHODS = {"lora"}
 
 RUNNING_LOG = "running_log.txt"
 
@@ -48,13 +59,12 @@ TRAINING_STAGES = {
     "PPO": "ppo",
     "DPO": "dpo",
     "KTO": "kto",
-    "ORPO": "orpo",
     "Pre-Training": "pt",
 }
 
-STAGES_USE_PAIR_DATA = ["rm", "dpo", "orpo"]
+STAGES_USE_PAIR_DATA = {"rm", "dpo"}
 
-SUPPORTED_CLASS_FOR_S2ATTN = ["llama"]
+SUPPORTED_CLASS_FOR_S2ATTN = {"llama"}
 
 V_HEAD_WEIGHTS_NAME = "value_head.bin"
 
@@ -87,6 +97,19 @@ def register_model_group(
         DEFAULT_TEMPLATE[prefix] = template
     if vision:
         VISION_MODELS.add(prefix)
+
+
+register_model_group(
+    models={
+        "Aya-23-8B-Chat": {
+            DownloadSource.DEFAULT: "CohereForAI/aya-23-8B",
+        },
+        "Aya-23-35B-Chat": {
+            DownloadSource.DEFAULT: "CohereForAI/aya-23-35B",
+        },
+    },
+    template="cohere",
+)
 
 
 register_model_group(
@@ -328,6 +351,7 @@ register_model_group(
         },
         "DeepSeek-MoE-16B-v2-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Lite",
+            DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2-Lite",
         },
         "DeepSeek-MoE-236B-Base": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2",
@@ -339,6 +363,7 @@ register_model_group(
         },
         "DeepSeek-MoE-16B-v2-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Lite-Chat",
+            DownloadSource.MODELSCOPE: "deepseek-ai/DeepSeek-V2-Lite-Chat",
         },
         "DeepSeek-MoE-236B-Chat": {
             DownloadSource.DEFAULT: "deepseek-ai/DeepSeek-V2-Chat",
@@ -431,6 +456,12 @@ register_model_group(
             DownloadSource.DEFAULT: "google/gemma-7b-it",
             DownloadSource.MODELSCOPE: "AI-ModelScope/gemma-7b-it",
         },
+        "Gemma-1.1-2B-Chat": {
+            DownloadSource.DEFAULT: "google/gemma-1.1-2b-it",
+        },
+        "Gemma-1.1-7B-Chat": {
+            DownloadSource.DEFAULT: "google/gemma-1.1-7b-it",
+        },
     },
     template="gemma",
 )
@@ -438,15 +469,18 @@ register_model_group(
 
 register_model_group(
     models={
-        "CodeGemma-2B": {
-            DownloadSource.DEFAULT: "google/codegemma-1.1-2b",
-        },
         "CodeGemma-7B": {
             DownloadSource.DEFAULT: "google/codegemma-7b",
         },
         "CodeGemma-7B-Chat": {
-            DownloadSource.DEFAULT: "google/codegemma-1.1-7b-it",
+            DownloadSource.DEFAULT: "google/codegemma-7b-it",
             DownloadSource.MODELSCOPE: "AI-ModelScope/codegemma-7b-it",
+        },
+        "CodeGemma-1.1-2B": {
+            DownloadSource.DEFAULT: "google/codegemma-1.1-2b",
+        },
+        "CodeGemma-1.1-7B-Chat": {
+            DownloadSource.DEFAULT: "google/codegemma-1.1-7b-it",
         },
     },
     template="gemma",
@@ -636,6 +670,12 @@ register_model_group(
             DownloadSource.DEFAULT: "mistralai/Mistral-7B-Instruct-v0.2",
             DownloadSource.MODELSCOPE: "AI-ModelScope/Mistral-7B-Instruct-v0.2",
         },
+        "Mistral-7B-v0.3": {
+            DownloadSource.DEFAULT: "mistralai/Mistral-7B-v0.3",
+        },
+        "Mistral-7B-v0.3-Chat": {
+            DownloadSource.DEFAULT: "mistralai/Mistral-7B-Instruct-v0.3",
+        },
     },
     template="mistral",
 )
@@ -657,6 +697,7 @@ register_model_group(
         },
         "Mixtral-8x22B-v0.1-Chat": {
             DownloadSource.DEFAULT: "mistralai/Mixtral-8x22B-Instruct-v0.1",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/Mixtral-8x22B-Instruct-v0.1",
         },
     },
     template="mistral",
@@ -670,6 +711,9 @@ register_model_group(
         },
         "OLMo-7B": {
             DownloadSource.DEFAULT: "allenai/OLMo-7B-hf",
+        },
+        "OLMo-7B-Chat": {
+            DownloadSource.DEFAULT: "ssec-uw/OLMo-7B-Instruct-hf",
         },
         "OLMo-1.7-7B": {
             DownloadSource.DEFAULT: "allenai/OLMo-1.7-7B-hf",
@@ -686,6 +730,16 @@ register_model_group(
         }
     },
     template="openchat",
+)
+
+
+register_model_group(
+    models={
+        "OpenChat3.6-8B-Chat": {
+            DownloadSource.DEFAULT: "openchat/openchat-3.6-8b-20240522",
+        }
+    },
+    template="openchat-3.6",
 )
 
 
@@ -720,18 +774,23 @@ register_model_group(
     models={
         "PaliGemma-3B-pt-224": {
             DownloadSource.DEFAULT: "google/paligemma-3b-pt-224",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/paligemma-3b-pt-224",
         },
         "PaliGemma-3B-pt-448": {
             DownloadSource.DEFAULT: "google/paligemma-3b-pt-448",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/paligemma-3b-pt-448",
         },
         "PaliGemma-3B-pt-896": {
             DownloadSource.DEFAULT: "google/paligemma-3b-pt-896",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/paligemma-3b-pt-896",
         },
         "PaliGemma-3B-mix-224": {
             DownloadSource.DEFAULT: "google/paligemma-3b-mix-224",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/paligemma-3b-mix-224",
         },
         "PaliGemma-3B-mix-448": {
             DownloadSource.DEFAULT: "google/paligemma-3b-mix-448",
+            DownloadSource.MODELSCOPE: "AI-ModelScope/paligemma-3b-mix-448",
         },
     },
     vision=True,
@@ -754,13 +813,29 @@ register_model_group(
 
 register_model_group(
     models={
-        "Phi3-3.8B-4k-Chat": {
+        "Phi3-4B-4k-Chat": {
             DownloadSource.DEFAULT: "microsoft/Phi-3-mini-4k-instruct",
             DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-mini-4k-instruct",
         },
-        "Phi3-3.8B-128k-Chat": {
+        "Phi3-4B-128k-Chat": {
             DownloadSource.DEFAULT: "microsoft/Phi-3-mini-128k-instruct",
             DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-mini-128k-instruct",
+        },
+        "Phi3-7B-8k-Chat": {
+            DownloadSource.DEFAULT: "microsoft/Phi-3-small-8k-instruct",
+            DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-small-8k-instruct",
+        },
+        "Phi3-7B-128k-Chat": {
+            DownloadSource.DEFAULT: "microsoft/Phi-3-small-128k-instruct",
+            DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-small-128k-instruct",
+        },
+        "Phi3-14B-8k-Chat": {
+            DownloadSource.DEFAULT: "microsoft/Phi-3-medium-4k-instruct",
+            DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-medium-4k-instruct",
+        },
+        "Phi3-14B-128k-Chat": {
+            DownloadSource.DEFAULT: "microsoft/Phi-3-medium-128k-instruct",
+            DownloadSource.MODELSCOPE: "LLM-Research/Phi-3-medium-128k-instruct",
         },
     },
     module="qkv_proj",
@@ -1030,6 +1105,26 @@ register_model_group(
             DownloadSource.MODELSCOPE: "AI-ModelScope/starcoder2-15b",
         },
     }
+)
+
+
+register_model_group(
+    models={
+        "TeleChat-7B-Chat": {
+            DownloadSource.DEFAULT: "Tele-AI/telechat-7B",
+            DownloadSource.MODELSCOPE: "TeleAI/telechat-7B",
+        },
+        "TeleChat-12B-Chat": {
+            DownloadSource.DEFAULT: "Tele-AI/TeleChat-12B",
+            DownloadSource.MODELSCOPE: "TeleAI/TeleChat-12B",
+        },
+        "TeleChat-12B-v2-Chat": {
+            DownloadSource.DEFAULT: "Tele-AI/TeleChat-12B-v2",
+            DownloadSource.MODELSCOPE: "TeleAI/TeleChat-12B-v2",
+        },
+    },
+    module="query,key_value",
+    template="telechat",
 )
 
 

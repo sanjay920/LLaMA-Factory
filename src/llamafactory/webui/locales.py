@@ -46,26 +46,15 @@ LOCALES = {
             "label": "微调方法",
         },
     },
-    "adapter_path": {
+    "checkpoint_path": {
         "en": {
-            "label": "Adapter path",
+            "label": "Checkpoint path",
         },
         "ru": {
-            "label": "Путь к адаптеру",
+            "label": "Путь контрольной точки",
         },
         "zh": {
-            "label": "适配器路径",
-        },
-    },
-    "refresh_btn": {
-        "en": {
-            "value": "Refresh adapters",
-        },
-        "ru": {
-            "value": "Обновить адаптеры",
-        },
-        "zh": {
-            "value": "刷新适配器",
+            "label": "检查点路径",
         },
     },
     "advanced_tab": {
@@ -1103,6 +1092,48 @@ LOCALES = {
             "info": "保存训练参数的配置文件路径。",
         },
     },
+    "device_count": {
+        "en": {
+            "label": "Device count",
+            "info": "Number of devices available.",
+        },
+        "ru": {
+            "label": "Количество устройств",
+            "info": "Количество доступных устройств.",
+        },
+        "zh": {
+            "label": "设备数量",
+            "info": "当前可用的运算设备数。",
+        },
+    },
+    "ds_stage": {
+        "en": {
+            "label": "DeepSpeed stage",
+            "info": "DeepSpeed stage for distributed training.",
+        },
+        "ru": {
+            "label": "Этап DeepSpeed",
+            "info": "Этап DeepSpeed для распределенного обучения.",
+        },
+        "zh": {
+            "label": "DeepSpeed stage",
+            "info": "多卡训练的 DeepSpeed stage。",
+        },
+    },
+    "ds_offload": {
+        "en": {
+            "label": "Enable offload",
+            "info": "Enable DeepSpeed offload (slow down training).",
+        },
+        "ru": {
+            "label": "Включить выгрузку",
+            "info": "включить выгрузку DeepSpeed (замедлит обучение).",
+        },
+        "zh": {
+            "label": "使用 offload",
+            "info": "使用 DeepSpeed offload（会减慢速度）。",
+        },
+    },
     "output_box": {
         "en": {
             "value": "Ready.",
@@ -1444,6 +1475,11 @@ ALERTS = {
         "ru": "Пожалуйста, выберите адаптер.",
         "zh": "请选择适配器。",
     },
+    "err_no_output_dir": {
+        "en": "Please provide output dir.",
+        "ru": "Пожалуйста, укажите выходную директорию.",
+        "zh": "请填写输出目录。",
+    },
     "err_no_reward_model": {
         "en": "Please select a reward model.",
         "ru": "Пожалуйста, выберите модель вознаграждения.",
@@ -1469,11 +1505,6 @@ ALERTS = {
         "ru": "Обучение недоступно в демонстрационном режиме, сначала скопируйте пространство в частное.",
         "zh": "展示模式不支持训练，请先复制到私人空间。",
     },
-    "err_device_count": {
-        "en": "Multiple GPUs are not supported yet.",
-        "ru": "Пока не поддерживается множественные GPU.",
-        "zh": "尚不支持多 GPU 训练。",
-    },
     "err_tool_name": {
         "en": "Tool name not found.",
         "ru": "Имя инструмента не найдено.",
@@ -1493,6 +1524,11 @@ ALERTS = {
         "en": "CUDA environment was not detected.",
         "ru": "Среда CUDA не обнаружена.",
         "zh": "未检测到 CUDA 环境。",
+    },
+    "warn_output_dir_exists": {
+        "en": "Output dir already exists, will resume training from here.",
+        "ru": "Выходной каталог уже существует, обучение будет продолжено отсюда.",
+        "zh": "输出目录已存在，将从该断点恢复训练。",
     },
     "info_aborting": {
         "en": "Aborted, wait for terminating...",

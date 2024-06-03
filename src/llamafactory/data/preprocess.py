@@ -369,14 +369,14 @@ def preprocess_kto_dataset(
 
 
 def print_supervised_dataset_example(example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer") -> None:
-    print("input_ids:\n{}".format(example["input_ids"]))
+    # print("input_ids:\n{}".format(example["input_ids"]))
     print("inputs:\n{}".format(tokenizer.decode(example["input_ids"], skip_special_tokens=False)))
     print("label_ids:\n{}".format(example["labels"]))
-    print(
-        "labels:\n{}".format(
-            tokenizer.decode(list(filter(lambda x: x != IGNORE_INDEX, example["labels"])), skip_special_tokens=False)
-        )
-    )
+    # print(
+    #     "labels:\n{}".format(
+    #         tokenizer.decode(list(filter(lambda x: x != IGNORE_INDEX, example["labels"])), skip_special_tokens=False)
+    #     )
+    # )
 
 
 def print_pairwise_dataset_example(example: Dict[str, List[int]], tokenizer: "PreTrainedTokenizer") -> None:

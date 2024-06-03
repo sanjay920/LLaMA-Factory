@@ -114,7 +114,7 @@ def init_adapter(
                     )
 
                 trainable_layers.append(module_name)
-
+        print("trainable_layers\n", trainable_layers)
         for name, param in model.named_parameters():
             if any(trainable_layer in name for trainable_layer in trainable_layers):
                 if cast_trainable_params_to_fp32:

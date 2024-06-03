@@ -238,6 +238,38 @@ def default_tool_extractor(content: str) -> Union[str, Tuple[str, str]]:
 
     return tool_name, json.dumps(arguments, ensure_ascii=False)
 
+def rubra_fc_v3_tool_extractor(content: str) -> str:
+    print(content)
+    # Check if the content starts with [TOOL_CALLS]
+    if content.startswith('[TOOL_CALLS]'):
+        # Remove the [TOOL_CALLS] tag
+        content = content[len('[TOOL_CALLS]'):].strip()
+        # Remove the [/TOOL_CALLS] tag if it exists anywhere in the content
+        content = content.replace('[/TOOL_CALLS]', '').strip()
+        print(content)
+        # Initialize list to hold the resulting dictionaries and raw JSON strings
+        result_dicts = []
+        # Split the content into individual JSON strings (assuming each JSON is separated by a new line)
+        json_strings = content.split('\n')
+        # Process each JSON string
+        for json_string in json_strings:
+            json_string = json_string.strip()  # Remove any leading/trailing whitespace
+            if not json_string:
+                continue  # Skip empty lines
+            try:
+                # Try to parse the JSON string into a dictionary
+                json_dict = json.loads(json_string)
+                # Add the dictionary to the list
+                result_dicts.append(json_dict)
+            except json.JSONDecodeError:
+                # Add the raw JSON string to the list if it cannot be decoded
+                result_dicts.append(json_string)
+        # Convert the list of dictionaries and strings to a JSON string and return
+        return json.dumps(result_dicts, ensure_ascii=False)
+    else:
+        # Return the content as is if it doesn't start with <functions>
+        return content
+
 
 @dataclass
 class Formatter(ABC):
@@ -357,5 +389,7 @@ class ToolFormatter(Formatter):
     def extract(self, content: str) -> Union[str, Tuple[str, str]]:
         if self.tool_format == "default":
             return default_tool_extractor(content)
+        elif self.tool_format == "rubra-fc-v3":
+            return rubra_fc_v3_tool_extractor(content)
         else:
             raise NotImplementedError

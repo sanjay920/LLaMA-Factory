@@ -25,6 +25,26 @@ from transformers.modeling_utils import (
 if TYPE_CHECKING:
     from transformers import PretrainedConfig, PreTrainedModel
 
+import torch
+
+def fix_untrained_tokens(model, eps=1e-16):
+    """
+    Adjust untrained or zero-initialized tokens in the model's embedding matrices.
+    Args:
+        model (PreTrainedModel): The model to fix.
+        eps (float): Threshold to identify untrained tokens.
+    """
+    embedding_matrix = model.get_input_embeddings().weight.data
+    lm_head_matrix = model.get_output_embeddings().weight.data
+    indicator_untrained = torch.max(torch.abs(embedding_matrix), dim=1).values <= eps
+    where_untrained = torch.where(indicator_untrained)[0]
+    if where_untrained.numel() > 0:
+        print(f"Found {where_untrained.numel()} untrained tokens.")
+        trained_embedding_matrix = embedding_matrix[~indicator_untrained]
+        mean_embedding = trained_embedding_matrix.mean(dim=0)
+        embedding_matrix[where_untrained] = mean_embedding
+        lm_head_matrix[where_untrained] = mean_embedding
+
 
 def change_name(name: str, old_index: int, new_index: int) -> str:
     return name.replace(".{:d}.".format(old_index), ".{:d}.".format(new_index))
@@ -40,18 +60,17 @@ def block_expansion(
     config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path)
     num_layers = getattr(config, "num_hidden_layers")
     setattr(config, "num_hidden_layers", num_layers + num_expand)
-    
-    del config.__dict__["auto_map"]
-    del config.__dict__["_name_or_path"]
 
     config.save_pretrained(output_dir)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     tokenizer.save_pretrained(output_dir)
 
-    config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path)  # load the original one
-    del config.__dict__["auto_map"]
-    del config.__dict__["_name_or_path"]
+    config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path, trust_remote_code=True)  # load the original one
+    # if hasattr(config, "auto_map"):
+    #     del config.__dict__["auto_map"]
+    # if hasattr(config, "_name_or_path"):
+    #     del config.__dict__["_name_or_path"]
     if save_safetensors:
         setattr(config, "tie_word_embeddings", False)  # safetensors does not allow shared weights
 
@@ -62,6 +81,9 @@ def block_expansion(
         trust_remote_code=True,
         low_cpu_mem_usage=True,
     )
+    
+    # Fix untrained tokens in the model
+    fix_untrained_tokens(model)
     state_dict = model.state_dict()
 
     if num_layers % num_expand != 0:

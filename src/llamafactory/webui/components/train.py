@@ -3,9 +3,11 @@ from typing import TYPE_CHECKING, Dict
 from transformers.trainer_utils import SchedulerType
 
 from ...extras.constants import TRAINING_STAGES
+from ...extras.misc import get_device_count
 from ...extras.packages import is_gradio_available
-from ..common import DEFAULT_DATA_DIR, autoset_packing, list_adapters, list_dataset
-from ..components.data import create_preview_box
+from ..common import DEFAULT_DATA_DIR, list_checkpoints, list_datasets
+from ..utils import change_stage, check_output_dir, list_output_dirs
+from .data import create_preview_box
 
 
 if is_gradio_available():
@@ -186,7 +188,7 @@ def create_train_tab(engine: "Engine") -> Dict[str, "Component"]:
         with gr.Row():
             pref_beta = gr.Slider(minimum=0, maximum=1, value=0.1, step=0.01)
             pref_ftx = gr.Slider(minimum=0, maximum=10, value=0, step=0.01)
-            pref_loss = gr.Dropdown(choices=["sigmoid", "hinge", "ipo", "kto_pair"], value="sigmoid")
+            pref_loss = gr.Dropdown(choices=["sigmoid", "hinge", "ipo", "kto_pair", "orpo", "simpo"], value="sigmoid")
             reward_model = gr.Dropdown(multiselect=True, allow_custom_value=True)
             with gr.Column():
                 ppo_score_norm = gr.Checkbox()
@@ -255,8 +257,14 @@ def create_train_tab(engine: "Engine") -> Dict[str, "Component"]:
     with gr.Row():
         with gr.Column(scale=3):
             with gr.Row():
-                output_dir = gr.Textbox()
+                initial_dir = gr.Textbox(visible=False, interactive=False)
+                output_dir = gr.Dropdown(allow_custom_value=True)
                 config_path = gr.Textbox()
+
+            with gr.Row():
+                device_count = gr.Textbox(value=str(get_device_count() or 1), interactive=False)
+                ds_stage = gr.Dropdown(choices=["none", "2", "3"], value="none")
+                ds_offload = gr.Checkbox()
 
             with gr.Row():
                 resume_btn = gr.Checkbox(visible=False, interactive=False)
@@ -268,6 +276,7 @@ def create_train_tab(engine: "Engine") -> Dict[str, "Component"]:
         with gr.Column(scale=1):
             loss_viewer = gr.Plot()
 
+    input_elems.update({output_dir, config_path, device_count, ds_stage, ds_offload})
     elem_dict.update(
         dict(
             cmd_preview_btn=cmd_preview_btn,
@@ -275,36 +284,41 @@ def create_train_tab(engine: "Engine") -> Dict[str, "Component"]:
             arg_load_btn=arg_load_btn,
             start_btn=start_btn,
             stop_btn=stop_btn,
+            initial_dir=initial_dir,
             output_dir=output_dir,
             config_path=config_path,
+            device_count=device_count,
+            ds_stage=ds_stage,
+            ds_offload=ds_offload,
             resume_btn=resume_btn,
             progress_bar=progress_bar,
             output_box=output_box,
             loss_viewer=loss_viewer,
         )
     )
-
-    input_elems.update({output_dir, config_path})
     output_elems = [output_box, progress_bar, loss_viewer]
 
     cmd_preview_btn.click(engine.runner.preview_train, input_elems, output_elems, concurrency_limit=None)
-    arg_save_btn.click(engine.runner.save_args, input_elems, output_elems, concurrency_limit=None)
-    arg_load_btn.click(
-        engine.runner.load_args,
-        [engine.manager.get_elem_by_id("top.lang"), config_path],
-        list(input_elems) + [output_box],
-        concurrency_limit=None,
-    )
     start_btn.click(engine.runner.run_train, input_elems, output_elems)
     stop_btn.click(engine.runner.set_abort)
     resume_btn.change(engine.runner.monitor, outputs=output_elems, concurrency_limit=None)
 
-    dataset_dir.change(list_dataset, [dataset_dir, training_stage], [dataset], queue=False)
-    training_stage.change(list_dataset, [dataset_dir, training_stage], [dataset], queue=False).then(
-        list_adapters,
-        [engine.manager.get_elem_by_id("top.model_name"), engine.manager.get_elem_by_id("top.finetuning_type")],
-        [reward_model],
-        queue=False,
-    ).then(autoset_packing, [training_stage], [packing], queue=False)
+    lang = engine.manager.get_elem_by_id("top.lang")
+    model_name: "gr.Dropdown" = engine.manager.get_elem_by_id("top.model_name")
+    finetuning_type: "gr.Dropdown" = engine.manager.get_elem_by_id("top.finetuning_type")
+
+    arg_save_btn.click(engine.runner.save_args, input_elems, output_elems, concurrency_limit=None)
+    arg_load_btn.click(
+        engine.runner.load_args, [lang, config_path], list(input_elems) + [output_box], concurrency_limit=None
+    )
+
+    dataset.focus(list_datasets, [dataset_dir, training_stage], [dataset], queue=False)
+    training_stage.change(change_stage, [training_stage], [dataset, packing], queue=False)
+    reward_model.focus(list_checkpoints, [model_name, finetuning_type], [reward_model], queue=False)
+    model_name.change(list_output_dirs, [model_name, finetuning_type, initial_dir], [output_dir], queue=False)
+    finetuning_type.change(list_output_dirs, [model_name, finetuning_type, initial_dir], [output_dir], queue=False)
+    output_dir.change(
+        list_output_dirs, [model_name, finetuning_type, initial_dir], [output_dir], concurrency_limit=None
+    ).then(check_output_dir, inputs=[lang, model_name, finetuning_type, output_dir], concurrency_limit=None)
 
     return elem_dict

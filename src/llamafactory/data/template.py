@@ -26,6 +26,7 @@ class Template:
     format_separator: "Formatter"
     default_system: str
     stop_words: List[str]
+    image_token: str
     efficient_eos: bool
     replace_eos: bool
     force_system: bool
@@ -209,6 +210,7 @@ def _register_template(
     format_separator: Optional["Formatter"] = None,
     default_system: str = "",
     stop_words: List[str] = [],
+    image_token: str = "<image>",
     efficient_eos: bool = False,
     replace_eos: bool = False,
     force_system: bool = False,
@@ -256,6 +258,7 @@ def _register_template(
         format_separator=format_separator or default_separator_formatter,
         default_system=default_system,
         stop_words=stop_words,
+        image_token=image_token,
         efficient_eos=efficient_eos,
         replace_eos=replace_eos,
         force_system=force_system,
@@ -541,8 +544,13 @@ _register_template(
             )
         ]
     ),
-    format_system=EmptyFormatter(slots=[{"bos_token"}]),
-    force_system=True,
+    format_system=StringFormatter(
+        slots=[{"bos_token"}, "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>{{content}}<|END_OF_TURN_TOKEN|>"]
+    ),
+    default_system=(
+        "You are Command-R, a brilliant, sophisticated, AI-assistant trained to assist human users "
+        "by providing thorough responses. You are trained by Cohere."
+    ),
 )
 
 
@@ -730,7 +738,7 @@ _register_template(
 
 _register_template(
     name="mistral",
-    format_user=StringFormatter(slots=[" [INST] {{content}} [/INST]"]),
+    format_user=StringFormatter(slots=["[INST] {{content}} [/INST]"]),
     format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
     force_system=True,
 )
@@ -738,8 +746,7 @@ _register_template(
 
 _register_template(
     name="olmo",
-    format_user=StringFormatter(slots=["<|user|>\n{{content}}<|assistant|>"]),
-    format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
+    format_user=StringFormatter(slots=["<|user|>\n{{content}}<|assistant|>\n"]),
     format_system=StringFormatter(slots=[{"eos_token"}, "{{content}}"]),
     force_system=True,
 )
@@ -748,8 +755,24 @@ _register_template(
 _register_template(
     name="openchat",
     format_user=StringFormatter(slots=["GPT4 Correct User: {{content}}", {"eos_token"}, "GPT4 Correct Assistant:"]),
-    format_assistant=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
+    force_system=True,
+)
+
+
+_register_template(
+    name="openchat-3.6",
+    format_user=StringFormatter(
+        slots=[
+            (
+                "<|start_header_id|>GPT4 Correct User<|end_header_id|>\n\n{{content}}<|eot_id|>"
+                "<|start_header_id|>GPT4 Correct Assistant<|end_header_id|>\n\n"
+            )
+        ]
+    ),
+    format_system=StringFormatter(slots=[{"bos_token"}, "{{content}}"]),
+    stop_words=["<|eot_id|>"],
+    replace_eos=True,
     force_system=True,
 )
 
@@ -766,7 +789,6 @@ _register_template(
     name="phi",
     format_user=StringFormatter(slots=["<|user|>\n{{content}}<|end|>\n<|assistant|>\n"]),
     format_system=StringFormatter(slots=[{"bos_token"}, "<|system|>\n{{content}}<|end|>\n"]),
-    format_observation=StringFormatter(slots=["<|function_output|>\n{{content}}<|end|>\n<|assistant|>\n"]),
     format_separator=EmptyFormatter(slots=["\n"]),
     default_system="You are a helpful AI assistant.",
     stop_words=["<|end|>"],
@@ -845,6 +867,15 @@ _register_template(
 
 
 _register_template(
+    name="telechat",
+    format_user=StringFormatter(slots=["<_user>{{content}}<_bot>"]),
+    format_system=StringFormatter(slots=["<_system>{{content}}<_end>"]),
+    stop_words=["<_end>"],
+    replace_eos=True,
+)
+
+
+_register_template(
     name="vicuna",
     format_user=StringFormatter(slots=["USER: {{content}} ASSISTANT:"]),
     default_system=(
@@ -894,6 +925,7 @@ _register_template(
 _register_template(
     name="yi",
     format_user=StringFormatter(slots=["<|im_start|>user\n{{content}}<|im_end|>\n<|im_start|>assistant\n"]),
+    format_system=StringFormatter(slots=["<|im_start|>system\n{{content}}<|im_end|>\n"]),
     format_separator=EmptyFormatter(slots=["\n"]),
     stop_words=["<|im_end|>"],
     replace_eos=True,

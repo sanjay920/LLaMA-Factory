@@ -1,18 +1,19 @@
 from collections import defaultdict
 from contextlib import nullcontext
 from types import MethodType
-from typing import TYPE_CHECKING, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple, Union
 
 import torch
 from transformers import Trainer
 from trl import KTOTrainer
-from trl.trainer.utils import disable_dropout_in_model
+from trl.trainer import disable_dropout_in_model
 
 from ...extras.constants import IGNORE_INDEX
-from ..utils import create_custom_optimzer, create_custom_scheduler
+from ..utils import create_custom_optimzer, create_custom_scheduler, get_ref_context
 
 
 if TYPE_CHECKING:
+    import torch.utils.data
     from transformers import PreTrainedModel, ProcessorMixin
 
     from ...hparams import FinetuningArguments
@@ -50,10 +51,10 @@ class CustomKTOTrainer(KTOTrainer):
         self._stored_metrics = defaultdict(lambda: defaultdict(list))
 
         # kto hyperparams
-        self.beta = finetuning_args.kto_beta
+        self.beta = finetuning_args.pref_beta
         self.desirable_weight = finetuning_args.kto_chosen_weight
         self.undesirable_weight = finetuning_args.kto_rejected_weight
-        self.ftx_gamma = finetuning_args.kto_ftx
+        self.ftx_gamma = finetuning_args.pref_ftx
 
         Trainer.__init__(self, model=model, **kwargs)
         if not hasattr(self, "accelerator"):
@@ -67,6 +68,7 @@ class CustomKTOTrainer(KTOTrainer):
                     self.ref_model = self._prepare_deepspeed(self.ref_model)
             else:
                 self.ref_model = self.accelerator.prepare_model(self.ref_model, evaluation_mode=True)
+                self.ref_model.eval()
 
         if finetuning_args.use_badam:
             from badam import clip_grad_norm_for_sparse_tensor
@@ -83,6 +85,12 @@ class CustomKTOTrainer(KTOTrainer):
     ) -> "torch.optim.lr_scheduler.LRScheduler":
         create_custom_scheduler(self.args, num_training_steps, optimizer)
         return super().create_scheduler(num_training_steps, optimizer)
+
+    def _get_train_sampler(self) -> Optional["torch.utils.data.Sampler"]:
+        r"""
+        Replaces the sequential sampler of KTO Trainer created by trl with the random sampler.
+        """
+        return Trainer._get_train_sampler(self)
 
     def _save(self, output_dir: Optional[str] = None, state_dict: Optional[Dict[str, "torch.Tensor"]] = None) -> None:
         super()._save(output_dir, state_dict)
@@ -101,38 +109,39 @@ class CustomKTOTrainer(KTOTrainer):
         return -all_logps
 
     def forward(
+        self, model: "PreTrainedModel", batch: Dict[str, "torch.Tensor"], prefix: Literal["", "kl_"] = ""
+    ) -> Tuple["torch.Tensor", "torch.Tensor"]:
+        r"""
+        Runs forward pass and computes the log probabilities.
+        """
+        batch = {k: v.detach().clone() for k, v in batch.items()}  # avoid error
+        model_inputs = {
+            "input_ids": batch["{}input_ids".format(prefix)],
+            "attention_mask": batch["{}attention_mask".format(prefix)],
+        }
+        if "pixel_values" in batch:
+            model_inputs["pixel_values"] = batch["pixel_values"]
+
+        if "{}token_type_ids".format(prefix) in batch:
+            model_inputs["token_type_ids"] = batch["{}token_type_ids".format(prefix)]
+
+        logits = model(**model_inputs, return_dict=True, use_cache=False).logits.to(torch.float32)
+
+        logps = self.get_batch_logps(
+            logits=logits,
+            labels=batch["{}labels".format(prefix)],
+            average_log_prob=False,
+            is_encoder_decoder=self.is_encoder_decoder,
+            label_pad_token_id=self.label_pad_token_id,
+        )
+        return logits, logps
+
+    def concatenated_forward(
         self, model: "PreTrainedModel", batch: Dict[str, "torch.Tensor"]
     ) -> Tuple["torch.Tensor", "torch.Tensor", "torch.Tensor", "torch.Tensor", "torch.Tensor"]:
+        target_logits, target_logps = self.forward(model, batch)
         with torch.no_grad():
-            kl_logits = model(
-                input_ids=batch["kl_input_ids"],
-                attention_mask=batch["kl_attention_mask"],
-                return_dict=True,
-                use_cache=False,
-            ).logits.to(torch.float32)
-
-        target_logits = model(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            return_dict=True,
-            use_cache=False,
-        ).logits.to(torch.float32)
-
-        target_logps = self.get_batch_logps(
-            logits=target_logits,
-            labels=batch["labels"],
-            average_log_prob=False,
-            is_encoder_decoder=self.is_encoder_decoder,
-            label_pad_token_id=self.label_pad_token_id,
-        )
-
-        kl_logps = self.get_batch_logps(
-            logits=kl_logits,
-            labels=batch["kl_labels"],
-            average_log_prob=False,
-            is_encoder_decoder=self.is_encoder_decoder,
-            label_pad_token_id=self.label_pad_token_id,
-        )
+            _, kl_logps = self.forward(model, batch, prefix="kl_")
 
         if len(target_logps) != len(batch["kto_tags"]):
             raise ValueError("Mismatched shape of inputs and labels.")
@@ -147,6 +156,30 @@ class CustomKTOTrainer(KTOTrainer):
         rejected_logits = target_logits[rejected_idx, ...]
 
         return chosen_logps, rejected_logps, chosen_logits, rejected_logits, kl_logps
+
+    def compute_reference_log_probs(
+        self, model: "PreTrainedModel", batch: Dict[str, "torch.Tensor"]
+    ) -> Tuple["torch.Tensor", "torch.Tensor", "torch.Tensor"]:
+        r"""
+        Computes log probabilities of the reference model.
+        """
+        if self.ref_model is None:
+            ref_model = model
+            ref_context = get_ref_context(self.accelerator, model)
+        else:
+            ref_model = self.ref_model
+            ref_context = nullcontext()
+
+        with torch.no_grad(), ref_context:
+            (
+                reference_chosen_logps,
+                reference_rejected_logps,
+                _,
+                _,
+                reference_kl_logps,
+            ) = self.concatenated_forward(ref_model, batch)
+
+        return reference_chosen_logps, reference_rejected_logps, reference_kl_logps
 
     def get_batch_loss_metrics(
         self,
@@ -163,25 +196,11 @@ class CustomKTOTrainer(KTOTrainer):
             policy_chosen_logits,
             _,
             policy_kl_logps,
-        ) = self.forward(model, batch)
+        ) = self.concatenated_forward(model, batch)
 
-        with torch.no_grad():
-            if self.ref_model is None:
-                ref_model = self.model
-                ref_context = self.accelerator.unwrap_model(self.model).disable_adapter()
-            else:
-                ref_model = self.ref_model
-                ref_context = nullcontext()
-
-            with ref_context:
-                (
-                    reference_chosen_logps,
-                    reference_rejected_logps,
-                    _,
-                    _,
-                    reference_kl_logps,
-                ) = self.forward(ref_model, batch)
-
+        reference_chosen_logps, reference_rejected_logps, reference_kl_logps = self.compute_reference_log_probs(
+            model, batch
+        )
         losses, chosen_rewards, rejected_rewards, kl = self.kto_loss(
             policy_chosen_logps,
             policy_rejected_logps,

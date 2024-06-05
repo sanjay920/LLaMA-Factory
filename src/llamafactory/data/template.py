@@ -802,6 +802,7 @@ _register_template(
     format_observation=StringFormatter(slots=["<|function_output|>\n{{content}}<|end|>\n<|assistant|>\n"]),
     format_separator=EmptyFormatter(slots=["\n"]),
     format_tools=ToolFormatter(tool_format="rubra-fc-v3"),
+    format_function=StringFormatter(slots=["{{content}}", {"eos_token"}]),
     default_system="You are a helpful AI assistant.",
     stop_words=["<|end|>"],
     replace_eos=True,

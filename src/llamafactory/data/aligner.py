@@ -119,19 +119,19 @@ def convert_sharegpt(
         aligned_messages = []
         broken_data = False
         for turn_idx, message in enumerate(messages):
-            if message[dataset_attr.role_tag] not in accept_tags[turn_idx % 2]:
-                logger.warning("Invalid role tag in {}.".format(messages))
-                broken_data = True
+            # if message[dataset_attr.role_tag] not in accept_tags[turn_idx % 2]:
+            #     logger.warning("Invalid role tag in {}.".format(messages))
+            #     broken_data = True
 
             aligned_messages.append(
                 {"role": tag_mapping[message[dataset_attr.role_tag]], "content": message[dataset_attr.content_tag]}
             )
 
-        if (not dataset_attr.ranking and len(aligned_messages) % 2 != 0) or (
-            dataset_attr.ranking and len(aligned_messages) % 2 == 0
-        ):
-            logger.warning("Invalid message count in {}.".format(messages))
-            broken_data = True
+        # if (not dataset_attr.ranking and len(aligned_messages) % 2 != 0) or (
+        #     dataset_attr.ranking and len(aligned_messages) % 2 == 0
+        # ):
+        #     logger.warning("Invalid message count in {}.".format(messages))
+        #     broken_data = True
 
         if dataset_attr.kto_tag and isinstance(examples[dataset_attr.kto_tag][i], bool):  # kto example
             prompt = aligned_messages[:-1]

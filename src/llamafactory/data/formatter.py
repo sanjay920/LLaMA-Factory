@@ -28,8 +28,8 @@ TOOL_SYSTEM_PROMPT_RUBRA = (
     "Ensure you have all necessary details before making tool calls. If additional information is needed, "
     "ask the user appropriately. Any tool call you make must correspond to the functions listed above.\n"
     "If you decide to call a tool, format it like this: "
-    '[TOOL_CALLS]{{"name": "<function_name>", "arguments": {{"<arg1_name>": "<arg1_value>", "<arg2_name>": "<arg2_value>", ...}}}}[/TOOL_CALLS] '
-    "where the JSON wrapped between [TOOL_CALLS] and [/TOOL_CALLS] represents the function call."
+    'starttoolcall{{"name": "<function_name>", "arguments": {{"<arg1_name>": "<arg1_value>", "<arg2_name>": "<arg2_value>", ...}}}}endtoolcall '
+    "where the JSON wrapped between starttoolcall and endtoolcall represents the function call."
 )
 
 ##################################

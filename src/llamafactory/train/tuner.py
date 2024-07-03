@@ -58,8 +58,8 @@ def export_model(args: Optional[Dict[str, Any]] = None) -> None:
     get_template_and_fix_tokenizer(tokenizer, data_args.template)
     model = load_model(tokenizer, model_args, finetuning_args)  # must after fixing tokenizer to resize vocab
 
-    if getattr(model, "quantization_method", None) and model_args.adapter_name_or_path is not None:
-        raise ValueError("Cannot merge adapters to a quantized model.")
+    # if getattr(model, "quantization_method", None) and model_args.adapter_name_or_path is not None:
+    #     raise ValueError("Cannot merge adapters to a quantized model.")
 
     if not isinstance(model, PreTrainedModel):
         raise ValueError("The model is not a `PreTrainedModel`, export aborted.")

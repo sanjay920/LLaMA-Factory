@@ -2,6 +2,22 @@
   "identity": {
     "file_name": "identity.json"
   },
+  "function_calling_post_filtering_v4": {
+    "hf_hub_url": "sanjay920/function_calling_post_filtering_v4",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "mmlu_pro_training": {
+    "hf_hub_url": "sanjay920/mmlu_pro_training",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "system": "system"
+    }
+  },
   "alpaca_en_demo": {
     "file_name": "alpaca_en_demo.json"
   },

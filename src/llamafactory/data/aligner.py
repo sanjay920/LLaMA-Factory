@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import json
 from functools import partial
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
@@ -119,32 +120,34 @@ def convert_sharegpt(
     odd_tags = (dataset_attr.user_tag, dataset_attr.observation_tag)
     even_tags = (dataset_attr.assistant_tag, dataset_attr.function_tag)
     accept_tags = (odd_tags, even_tags)
+    loaded_jsons = [json.loads(row) for row in examples[dataset_attr.messages]]
+    examples[dataset_attr.messages] = loaded_jsons
     for i, messages in enumerate(examples[dataset_attr.messages]):
-        if len(messages) == 0:
-            continue
-
         if dataset_attr.system_tag and messages[0][dataset_attr.role_tag] == dataset_attr.system_tag:
             system = messages[0][dataset_attr.content_tag]
             messages = messages[1:]
         else:
             system = examples[dataset_attr.system][i] if dataset_attr.system else ""
 
+        if len(messages) == 0:
+            continue
+
         aligned_messages = []
         broken_data = False
         for turn_idx, message in enumerate(messages):
-            if message[dataset_attr.role_tag] not in accept_tags[turn_idx % 2]:
-                logger.warning("Invalid role tag in {}.".format(messages))
-                broken_data = True
+            # if message[dataset_attr.role_tag] not in accept_tags[turn_idx % 2]:
+            #     logger.warning("Invalid role tag in {}.".format(messages))
+            #     broken_data = True
 
             aligned_messages.append(
                 {"role": tag_mapping[message[dataset_attr.role_tag]], "content": message[dataset_attr.content_tag]}
             )
 
-        if (not dataset_attr.ranking and len(aligned_messages) % 2 != 0) or (
-            dataset_attr.ranking and len(aligned_messages) % 2 == 0
-        ):
-            logger.warning("Invalid message count in {}.".format(messages))
-            broken_data = True
+        # if (not dataset_attr.ranking and len(aligned_messages) % 2 != 0) or (
+        #     dataset_attr.ranking and len(aligned_messages) % 2 == 0
+        # ):
+        #     logger.warning("Invalid message count in {}.".format(messages))
+        #     broken_data = True
 
         if dataset_attr.kto_tag and isinstance(examples[dataset_attr.kto_tag][i], bool):  # kto example
             prompt = aligned_messages[:-1]

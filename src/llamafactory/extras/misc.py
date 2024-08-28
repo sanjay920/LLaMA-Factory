@@ -37,7 +37,7 @@ from .logging import get_logger
 
 _is_fp16_available = is_torch_npu_available() or is_torch_cuda_available()
 try:
-    _is_bf16_available = is_torch_bf16_gpu_available()
+    _is_bf16_available = is_torch_bf16_gpu_available() or (is_torch_npu_available() and torch.npu.is_bf16_supported())
 except Exception:
     _is_bf16_available = False
 
@@ -137,7 +137,9 @@ def get_device_count() -> int:
     r"""
     Gets the number of available GPU or NPU devices.
     """
-    if is_torch_npu_available():
+    if is_torch_xpu_available():
+        return torch.xpu.device_count()
+    elif is_torch_npu_available():
         return torch.npu.device_count()
     elif is_torch_cuda_available():
         return torch.cuda.device_count()
@@ -152,6 +154,18 @@ def get_logits_processor() -> "LogitsProcessorList":
     logits_processor = LogitsProcessorList()
     logits_processor.append(InfNanRemoveLogitsProcessor())
     return logits_processor
+
+
+def get_peak_memory() -> Tuple[int, int]:
+    r"""
+    Gets the peak memory usage for the current device (in Bytes).
+    """
+    if is_torch_npu_available():
+        return torch.npu.max_memory_allocated(), torch.npu.max_memory_reserved()
+    elif is_torch_cuda_available():
+        return torch.cuda.max_memory_allocated(), torch.cuda.max_memory_reserved()
+    else:
+        return 0, 0
 
 
 def has_tokenized_data(path: "os.PathLike") -> bool:

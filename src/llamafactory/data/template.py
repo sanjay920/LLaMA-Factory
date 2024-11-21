@@ -740,6 +740,17 @@ _register_template(
     format_tools=ToolFormatter(tool_format="rubra-fc-v3"),
 )
 
+_register_template(
+    name="phi-rubra",
+    format_user=StringFormatter(slots=["<|user|>\n{{content}}<|end|>\n<|assistant|>\n"]),
+    format_system=StringFormatter(slots=["<|system|>\n{{content}}<|end|>\n"]),
+    format_separator=EmptyFormatter(slots=["\n"]),
+    format_prefix=EmptyFormatter(slots=[{"bos_token"}]),
+    stop_words=["<|end|>"],
+    format_tools=ToolFormatter(tool_format="rubra-fc-v3"),
+    replace_eos=True,
+)
+
 
 _register_template(
     name="mistral",

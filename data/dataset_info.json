@@ -2,6 +2,73 @@
   "identity": {
     "file_name": "identity.json"
   },
+  "example_rag": {
+    "file_name": "example_rag_pt.json",
+    "columns": {
+      "prompt": "text"
+    }
+  },
+  "example_rag_sft": {
+    "file_name": "example_rag_sft.json",
+    "columns": {
+      "prompt": "instruction",
+      "response": "output"
+    }
+  },
+  "longwriter": {
+    "hf_hub_url": "sanjay920/LongWriter-2.2k-english-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages"
+    }
+  },
+  "reasoning-0.01-transformed": {
+    "hf_hub_url": "sanjay920/reasoning-0.01-transformed",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "system": "system"
+    }
+  },
+  "yingbei-llm-reasoning-trick-questions": {
+    "hf_hub_url": "sanjay920/yingbei-llm-reasoning-trick-questions",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "longhorn_sample": {
+    "hf_hub_url": "sanjay920/longhorn_sample",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "WildChat_116k_functions": {
+    "hf_hub_url": "sanjay920/WildChat_116k_functions_no_long_30k",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "WildChat_116k_functions_no_long_30k_10_percent": {
+    "hf_hub_url": "sanjay920/WildChat_116k_functions_no_long_30k_10_percent",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "gptscript-data-json_v1_x5_no_long": {
+    "hf_hub_url": "sanjay920/gptscript-data-json_v1_x5_no_long",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools",
+      "system": "system"
+    }
+  },
   "function_calling_post_filtering_v4": {
     "hf_hub_url": "sanjay920/function_calling_post_filtering_v4",
     "formatting": "sharegpt",

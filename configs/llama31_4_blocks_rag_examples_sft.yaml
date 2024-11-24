@@ -1,0 +1,37 @@
+### model
+model_name_or_path: saves/llama31-8b-pro/4_blocks_rag_example_v2
+
+### method
+stage: sft
+do_train: true
+finetuning_type: freeze
+freeze_trainable_layers: 4
+freeze_trainable_modules: all
+use_llama_pro: true
+use_liger_kernel: true
+flash_attn: fa2
+
+### dataset
+dataset: example_rag_sft
+cutoff_len: 400000
+max_samples: 100000
+overwrite_cache: true
+preprocessing_num_workers: 1
+
+### output
+output_dir: saves/llama31-8b-pro/4_blocks_rag_example_v3
+template: llama3
+logging_steps: 1
+save_steps: 500
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 2
+learning_rate: 1.0e-4
+num_train_epochs: 50.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000

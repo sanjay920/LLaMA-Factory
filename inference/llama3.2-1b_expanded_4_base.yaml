@@ -1,0 +1,4 @@
+model_name_or_path: /home/ubuntu/utah-fs/LLaMA-Factory/models/Llama-3.2-1B-Instruct-pro-4
+template: llama3
+use_liger_kernel: true
+flash_attn: fa2

@@ -1,0 +1,6 @@
+model_name_or_path: /home/ubuntu/utah-fs/LLaMA-Factory/saves/llama31-8b-pro/4_blocks_coral_v2
+template: llama3
+finetuning_type: freeze
+use_liger_kernel: true
+flash_attn: fa2
+max_new_tokens: 16000

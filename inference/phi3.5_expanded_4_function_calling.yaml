@@ -1,0 +1,5 @@
+model_name_or_path: /home/ubuntu/utah-fs/LLaMA-Factory/saves/Phi-3.5-mini-instruct-pro-4/function_calling_round2
+template: phi-rubra
+finetuning_type: freeze
+use_liger_kernel: true
+flash_attn: fa2

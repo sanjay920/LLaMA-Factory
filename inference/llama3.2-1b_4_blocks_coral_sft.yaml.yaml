@@ -1,0 +1,6 @@
+model_name_or_path: /home/ubuntu/utah-fs/LLaMA-Factory/saves/llama32-1b-base-pro/4_blocks_sft_experiment_v1
+template: llama3
+finetuning_type: freeze
+use_liger_kernel: true
+flash_attn: fa2
+max_new_tokens: 16000

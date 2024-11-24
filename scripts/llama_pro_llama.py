@@ -16,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
-# sys.path.append('/home/ubuntu/.cache/huggingface/modules/transformers_modules/microsoft/Phi-3.5-mini-instruct/ccf028fc8e1b3ab750a7c55b22792f57ba69f216/')
-
 import json
 import os
 from collections import OrderedDict
@@ -63,7 +61,6 @@ def block_expansion(
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     tokenizer.save_pretrained(output_dir)
 
-    # config: "PretrainedConfig" = AutoConfig.from_pretrained(model_name_or_path)  # load the original one
     if save_safetensors:
         setattr(config, "tie_word_embeddings", False)  # safetensors does not allow shared weights
 
@@ -108,6 +105,10 @@ def block_expansion(
 
     for shard_file, shard in tqdm(shards.items(), desc="Save weights"):
         if save_safetensors:
+            # Handle weight sharing between embedding and lm_head
+            if "lm_head.weight" in shard and "model.embed_tokens.weight" in shard:
+                shard = shard.copy()  # Create a copy of the dictionary to avoid modifying the original
+                shard["lm_head.weight"] = shard["lm_head.weight"].clone()
             save_file(shard, os.path.join(output_dir, shard_file), metadata={"format": "pt"})
         else:
             torch.save(shard, os.path.join(output_dir, shard_file))

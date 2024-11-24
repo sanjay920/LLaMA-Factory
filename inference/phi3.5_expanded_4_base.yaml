@@ -1,0 +1,5 @@
+model_name_or_path: /home/ubuntu/utah-fs/LLaMA-Factory/models/Phi-3.5-mini-instruct-pro-4
+template: phi
+finetuning_type: freeze
+use_liger_kernel: true
+flash_attn: fa2

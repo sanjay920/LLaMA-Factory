@@ -1,0 +1,4 @@
+model_name_or_path: /home/ubuntu/utah-fs/LLaMA-Factory/saves/llama3.2-1b-pro/4_blocks_coral_v2
+template: llama3
+use_liger_kernel: true
+flash_attn: fa2

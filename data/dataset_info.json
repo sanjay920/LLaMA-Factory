@@ -14,6 +14,12 @@
       "prompt": "content"
     }
   },
+  "starcoderdata_100star_spy": {
+    "hf_hub_url": "zhensuuu/starcoderdata_100star_spy",
+    "columns": {
+      "prompt": "content"
+    }
+  },
   "smoltalk": {
     "hf_hub_url": "sanjay920/smoltalk",
     "formatting": "sharegpt",
@@ -68,6 +74,20 @@
     "columns": {
       "messages": "conversations",
       "system": "system"
+    }
+  },
+  "magpie-ultra-v01-gpt4o": {
+    "hf_hub_url": "sanjay920/magpie-ultra-v0.1-gpt4o",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "magpie-ultra-v10-rubra": {
+    "hf_hub_url": "sanjay920/magpie-ultra-v1.0-rubra",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
     }
   },
   "yingbei-llm-reasoning-trick-questions": {

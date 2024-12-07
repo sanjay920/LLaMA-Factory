@@ -1,0 +1,2 @@
+model_name_or_path: saves/function_calling/llama-32/1b/sft_round1
+template: llama3-rubra

@@ -14,6 +14,22 @@
       "prompt": "content"
     }
   },
+  "xlam-irrelevant": {
+    "hf_hub_url": "sanjay920/xlam-irrelevant-sharegpt",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
+  "xlam": {
+    "hf_hub_url": "sanjay920/xlam-rubra-dec7-2024",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "tools"
+    }
+  },
   "starcoderdata_100star_spy": {
     "hf_hub_url": "zhensuuu/starcoderdata_100star_spy",
     "columns": {
@@ -22,6 +38,20 @@
   },
   "smoltalk": {
     "hf_hub_url": "sanjay920/smoltalk",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "messages"
+    },
+    "tags": {
+      "role_tag": "role",
+      "content_tag": "content",
+      "user_tag": "user",
+      "assistant_tag": "assistant",
+      "system_tag": "system"
+    }
+  },
+  "smoltalk-rubra": {
+    "hf_hub_url": "sanjay920/smoltalk-rubra",
     "formatting": "sharegpt",
     "columns": {
       "messages": "messages"
@@ -76,9 +106,34 @@
       "system": "system"
     }
   },
-  "magpie-ultra-v01-gpt4o": {
+  "magpie-ultra-v01-gpt4o-single_turn": {
     "hf_hub_url": "sanjay920/magpie-ultra-v0.1-gpt4o",
     "formatting": "sharegpt",
+    "split": "single_turn",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "magpie-ultra-v01-gpt4o-two_turn": {
+    "hf_hub_url": "sanjay920/magpie-ultra-v0.1-gpt4o",
+    "formatting": "sharegpt",
+    "split": "two_turn",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "magpie-ultra-v01-gpt4o-three_turn": {
+    "hf_hub_url": "sanjay920/magpie-ultra-v0.1-gpt4o",
+    "formatting": "sharegpt",
+    "split": "three_turn",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+  "magpie-ultra-v01-gpt4o-four_turn": {
+    "hf_hub_url": "sanjay920/magpie-ultra-v0.1-gpt4o",
+    "formatting": "sharegpt",
+    "split": "four_turn",
     "columns": {
       "messages": "conversations"
     }
@@ -129,8 +184,8 @@
       "system": "system"
     }
   },
-  "function_calling_post_filtering_v4": {
-    "hf_hub_url": "sanjay920/function_calling_post_filtering_v4",
+  "function_calling_post_filtering_v5_expanded": {
+    "hf_hub_url": "sanjay920/function_calling_post_filtering_v5_expanded",
     "formatting": "sharegpt",
     "columns": {
       "messages": "conversations",

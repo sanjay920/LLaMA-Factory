@@ -1,0 +1,43 @@
+### model
+model_name_or_path: saves/function_calling/llama-32/1b/sft_round2
+
+### method
+stage: sft
+do_train: true
+finetuning_type: full
+use_liger_kernel: true
+flash_attn: fa2
+neftune_noise_alpha: 15
+
+### dataset
+dataset: smoltalk-rubra, function_calling_post_filtering_v4, yingbei-llm-reasoning-trick-questions, magpie-ultra-v01-gpt4o-single_turn, magpie-ultra-v01-gpt4o-two_turn, magpie-ultra-v01-gpt4o-three_turn, magpie-ultra-v01-gpt4o-four_turn, magpie-ultra-v10-rubra, mmlu_pro_training, gptscript-data-json_v1_x5_no_long, WildChat_116k_functions, xlam, xlam-irrelevant, function_calling_post_filtering_v4, function_calling_post_filtering_v4, function_calling_post_filtering_v4, function_calling_post_filtering_v4, function_calling_post_filtering_v4, xlam, xlam, xlam-irrelevant, xlam-irrelevant, xlam-irrelevant
+template: llama3-rubra
+# cutoff_len: 40000
+max_samples: 1000000000
+overwrite_cache: true
+preprocessing_num_workers: 32
+
+
+### output
+output_dir: saves/function_calling/llama-32/1b/sft_round3
+logging_steps: 10
+save_steps: 70000
+plot_loss: true
+overwrite_output_dir: true
+
+### train
+per_device_train_batch_size: 12
+gradient_accumulation_steps: 8
+learning_rate: 0.00002
+max_grad_norm: 3.0
+num_train_epochs: 2.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+
+### eval
+# val_size: 0.1
+# per_device_eval_batch_size: 1
+# eval_strategy: steps
+# eval_steps: 500

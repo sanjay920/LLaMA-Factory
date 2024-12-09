@@ -2,6 +2,22 @@
   "identity": {
     "file_name": "identity.json"
   },
+  "gpt-4o-200k": {
+    "hf_hub_url": "sanjay920/gpt-4o-200k-clean",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
+  "gpt-4o-qa": {
+    "hf_hub_url": "sanjay920/gpt-4o-qa-cleaned",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "tools": "functions"
+    }
+  },
   "pretrain_experiment_elections": {
     "file_name": "pretrain_experiment_elections.json",
     "columns": {
